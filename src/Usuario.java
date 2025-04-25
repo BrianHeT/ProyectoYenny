@@ -309,5 +309,5 @@ public abstract class Usuario {
 		} while (email == null);
 		return email.trim();
 	}
-
+	
 }

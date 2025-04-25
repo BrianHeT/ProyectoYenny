@@ -1,4 +1,6 @@
 
+import java.util.LinkedList;
+
 import javax.swing.JOptionPane;
 
 public class Cliente extends Usuario {
@@ -29,6 +31,7 @@ public class Cliente extends Usuario {
 			switch (opcion) {
 			case "1":
 				JOptionPane.showMessageDialog(null, "Mostrando Catálogo... [Prototipo]");
+				verLibrosDisponibles();
 				break;
 			case "2":
 				JOptionPane.showMessageDialog(null, "Mostrando Carrito... [Prototipo]");
@@ -45,4 +48,24 @@ public class Cliente extends Usuario {
 			}
 		}
 	}
+	// metodo para ver la lista de libros --aun no implementado--
+		public void verLibrosDisponibles() {
+		    LinkedList<Libro> disponibles = Libro.getListaLibros();
+
+		    if (disponibles.isEmpty()) {
+		        JOptionPane.showMessageDialog(null, "No hay libros disponibles por el momento.");
+		        return;
+		    }
+
+		    String mensaje = "Libros disponibles:\n\n"
+		    		+ "Recomendacion semanal:\n"
+		    		+ "'El señor de los anillos'\n"
+		    		+ "'Harry Potter'\n"
+		    		+ "'Los Juegos del Hambre\n'";
+		    for (Libro libro : disponibles) {
+		        mensaje += libro.toString() + "\n----------------------\n";
+		    }
+
+		    JOptionPane.showMessageDialog(null, mensaje);
+		}
 }
