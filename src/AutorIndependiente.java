@@ -21,7 +21,7 @@ public class AutorIndependiente extends Autor {
         while (!salir) {
             String opcion = JOptionPane.showInputDialog(
                 "Menú Autor Independiente:\n" +
-                "1) Enviar nuevo libro\n" +
+                "1) Enviasfdssdsdsdr nuevo libro\n" +
                 "2) Ver mis libros enviados\n" +
                 "3) Salir"
             );

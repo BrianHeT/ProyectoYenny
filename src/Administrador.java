@@ -20,7 +20,7 @@ public class Administrador extends Usuario {
     public void mostrarMenu() {
     	boolean salir = false;
         while (!salir) {
-            String[] opciones = {"Ver Usuarios", "Modificar Usuario", "Eliminar Usuario","Ver libros","Agregar Libro","Modificar Libro","Eliminar Libro", "Salir"};
+            String[] opciones = {"Ver Usuarios", "Modificar Usuario", "Eliminar Usuario","Ver libros","Agregar Libro","Modificar Libro","Eliminar Libro","Ver Compras", "Salir"};
             int opcion = JOptionPane.showOptionDialog(null, "Menú Administrador", 
                                                     "Elige una opción", 
                                                     JOptionPane.DEFAULT_OPTION, 
@@ -49,6 +49,9 @@ public class Administrador extends Usuario {
                 Libro.eliminarLibro();
                 break;
             case 7:
+                JOptionPane.showMessageDialog(null, "Ver compras... [Prototipo]");
+                break;
+            case 8:
                 salir = true;
                 break;
             default:
