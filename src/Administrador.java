@@ -50,6 +50,7 @@ public class Administrador extends Usuario {
                 break;
             case 7:
                 JOptionPane.showMessageDialog(null, "Ver compras... [Prototipo]");
+                GestionPagos.getInstance().mostrarTransacciones(); // Usar la instancia única             
                 break;
             case 8:
                 salir = true;

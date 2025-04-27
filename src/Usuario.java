@@ -127,6 +127,9 @@ public abstract class Usuario {
 		// Crear un Administrador predeterminado
 		Administrador  admin = new Administrador("SuperAdmin", "admin@libreria.com", 12345678, "admin123");
 		Usuario.getUsuarios().add(admin); // Agregar el Administrador a la lista global
+		Cliente hector = new Cliente("hector","123",12345679,"h@h","superi"
+				+ "");
+		Usuario.getUsuarios().add(hector);
 	}
 	
 

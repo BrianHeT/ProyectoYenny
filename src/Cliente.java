@@ -38,10 +38,7 @@ public class Cliente extends Usuario {
 	}
 
 	@Override
-	public void mostrarMenu() {
-		boolean salir = false;
-		
-		
+	public void mostrarMenu() {		
 		int opcion;
 		do {
 		
@@ -68,7 +65,7 @@ public class Cliente extends Usuario {
 				break;
 			case 3:
 				JOptionPane.showMessageDialog(null, "Realizando Compra... [Prototipo]");
-				realizarPago();
+			    realizarPago();
 				break;
 			case 4:
 				JOptionPane.showMessageDialog(null, "Ver Estado de envio... [Prototipo]");
@@ -139,18 +136,13 @@ public class Cliente extends Usuario {
 	        Carrito.agregarItem(libroSeleccionado, cantidad);
 	        JOptionPane.showMessageDialog(null, "Libro agregado al carrito.");
 	    }
-	    
-	    // Método para "realizar el pago"
-	    private void realizarPago() {
-	        double total = Carrito.calcularTotal();
-	        int confirmar = JOptionPane.showConfirmDialog(null, "El total a pagar es: $" + total + "\n¿Desea proceder con el pago?", "Confirmar Pago", JOptionPane.YES_NO_OPTION);
-	        if (confirmar == JOptionPane.YES_OPTION) {
-	            JOptionPane.showMessageDialog(null, "Pago realizado. ¡Gracias por su compra!");
-	            Carrito.vaciar(); // Después del pago se vacía el carrito
-	        } else {
-	            JOptionPane.showMessageDialog(null, "Pago cancelado.");
-	        }
+	    public void realizarPago() {
+	        GestionPagos gestionPagos = GestionPagos.getInstance(); // Obtener la instancia única
+	        gestionPagos.realizarPago(this); // Realizar el pago
 	    }
+
+	    
+
 	    public void verLibrosDelCarrito() {
 	        if (Carrito.getItems().isEmpty()) {
 	            JOptionPane.showMessageDialog(null, "El carrito está vacío.", "Carrito de Compras", JOptionPane.INFORMATION_MESSAGE);
