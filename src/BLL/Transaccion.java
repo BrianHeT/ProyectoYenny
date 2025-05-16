@@ -1,7 +1,9 @@
+package BLL;
 	import java.util.List;
 
 public class Transaccion {
-
+	
+	private int id;
 	private Cliente cliente;
 	    private double total;
 	    private List<ItemCarrito> items; // Lista de libros comprados en esta transacción
@@ -11,8 +13,20 @@ public class Transaccion {
 	        this.total = total;
 	        this.items = items;
 	    }
+	    
+	    
 
-	    public Cliente getCliente() {
+	    public Transaccion(int id, Cliente cliente, double total, List<ItemCarrito> items) {
+			super();
+			this.id = id;
+			this.cliente = cliente;
+			this.total = total;
+			this.items = items;
+		}
+
+
+
+		public Cliente getCliente() {
 	        return cliente;
 	    }
 

@@ -7,3 +7,9 @@
 /TiposUsuario.class
 /Usuario.class
 /Libro.class
+/Carrito.class
+/GestionPagos.class
+/ItemCarrito.class
+/TipoOpcionAutor.class
+/TipoOpcionCliente.class
+/Transaccion.class

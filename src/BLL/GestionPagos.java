@@ -1,9 +1,11 @@
+package BLL;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GestionPagos {
+	private int id;
     private static GestionPagos instancia; // Instancia única (singleton)
     private List<Transaccion> transacciones; // Lista para registrar transacciones realizadas
 
@@ -11,8 +13,16 @@ public class GestionPagos {
     private GestionPagos() {
         this.transacciones = new ArrayList<>();
     }
+    
 
-    public static GestionPagos getInstance() {
+    public GestionPagos(int id) {
+		super();
+		this.id = id;
+		this.transacciones  = new ArrayList<>();
+	}
+
+
+	public static GestionPagos getInstance() {
         if (instancia == null) {
             instancia = new GestionPagos();
         }

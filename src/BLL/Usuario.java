@@ -1,10 +1,16 @@
+package BLL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JOptionPane;
 
-public abstract class Usuario {
+import DLL.ControllerUsuario;
+import repository.Encriptador;
+import repository.TiposUsuario;
+
+public abstract  class Usuario implements Encriptador {
+    private int id;
 	private String mail;
 	private String nombre;
 	private int dni;
@@ -12,6 +18,14 @@ public abstract class Usuario {
 	private static LinkedList<Usuario> usuarios = new LinkedList<>();
 	private static LinkedList<Cliente> clientes = new LinkedList<>();
 	private static LinkedList<Autor> autor = new LinkedList<>();
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	private static LinkedList<Autor> Indepen = new LinkedList<>();
 
 	public static LinkedList<Autor> getAutor() {
@@ -32,11 +46,24 @@ public abstract class Usuario {
 
 	public Usuario(String nombre, String password, int dni, String mail) {
 		this.nombre = nombre;
-		this.password = password;
+		this.password =  encriptar(password);
 		this.mail = mail;
 		this.dni = dni;
 		usuarios.add(this);
 	}
+	
+
+	public Usuario(int id, String mail, String nombre, int dni, String password) {
+		super();
+		this.id = id;
+		this.mail = mail;
+		this.nombre = nombre;
+		this.dni = dni;
+		this.password =  encriptar(password);
+	}
+	 public Usuario() {
+	      
+	    }
 
 	public String getNombre() {
 
@@ -122,112 +149,57 @@ public abstract class Usuario {
 	    return true; // El DNI es único
 	}
 	
-	public static void ActualizarBios(){
-		
-		// Crear un Administrador predeterminado
-		Administrador  admin = new Administrador("SuperAdmin", "admin@libreria.com", 12345678, "admin123");
-		Usuario.getUsuarios().add(admin); // Agregar el Administrador a la lista global
-		Cliente hector = new Cliente("hector","123",12345679,"h@h","superi"
-				+ "");
-		Usuario.getUsuarios().add(hector);
-	}
+	
 	
 
 
-	public static void crearUsuario() {
+	// 📌 Método para capturar datos y enviarlos al controlador
+	public static void registrarUsuario(ControllerUsuario controller) {
+	    String nombre = JOptionPane.showInputDialog("Ingrese su nombre:");
+	    String mail = JOptionPane.showInputDialog("Ingrese su correo:");
+	    int dni = Integer.parseInt(JOptionPane.showInputDialog("Ingrese su DNI:"));
+	    String password = JOptionPane.showInputDialog("Ingrese su contraseña:");
 
-		int opcion;
+	    // 📌 Preguntar el tipo de usuario
+	    String[] opciones = {"Administrador", "Cliente", "Autor"};
+	    int seleccion = JOptionPane.showOptionDialog(null, "Seleccione el tipo de usuario", "Registro",
+	            JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
 
-		opcion = JOptionPane.showOptionDialog(null, "Seleccione una opción", "Gestión de Usuarios",
-				JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, TiposUsuario.values(),
-				TiposUsuario.values()[0]);
+	    String tipoUsuario = opciones[seleccion]; // Guardar la selección del usuario
 
-		switch (opcion) {
-		case 0: // Crear Cliente
-			// Solicitar datos del cliente
-			String nombre = validarCaracteres("Ingrese el nombre del cliente:");
-			int dni = validarDni("Ingrese el DNI del cliente:");
-			String password = JOptionPane.showInputDialog("Ingrese la contraseña del cliente:");
-			String direccion = validarCaracteres("Ingrese su dirección:");
-			String email = validarEmail("Ingrese el email del cliente:");
+	    // 📌 Instanciar el tipo de usuario correcto
+	    Usuario nuevoUsuario = null;
+	    String datoAdicional1 = "";
+	    String datoAdicional2 = "";
 
-			// Crear y agregar cliente
-			Cliente nuevoCliente = new Cliente(nombre, password, dni, email, direccion);
-			clientes.add(nuevoCliente); // Lista global 'clientes'
-			JOptionPane.showMessageDialog(null, "Cliente creado exitosamente.");
-			break;
+	    switch (tipoUsuario.toLowerCase()) {
+	        case "administrador":
+	            datoAdicional1 = JOptionPane.showInputDialog("Ingrese su apellido:");
+	            nuevoUsuario = new Administrador(nombre, mail, dni, password, datoAdicional1);
+	            break;
+	        case "cliente":
+	            datoAdicional1 = JOptionPane.showInputDialog("Ingrese su dirección:");
+	            nuevoUsuario = new Cliente(nombre, password, dni, mail, datoAdicional1);
+	            break;
+	        case "autor":
+	            boolean independiente = JOptionPane.showConfirmDialog(null, "¿Es autor independiente?", "Autor Independiente",
+	                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+	            datoAdicional1 = String.valueOf(independiente);
+	            datoAdicional2 = independiente ? "Independiente" : JOptionPane.showInputDialog("Ingrese el nombre de la editorial:");
+	            nuevoUsuario = new Autor(nombre, password, dni, mail, independiente, datoAdicional2);
+	            break;
+	        default:
+	            JOptionPane.showMessageDialog(null, "Error: Tipo de usuario inválido.");
+	            return;
+	    }
 
-		case 1: // Crear Autor Independiente
-			// Solicitar datos básicos del autor independiente
-			nombre = validarCaracteres("Ingrese el nombre del autor:");
-			dni = validarDni("Ingrese el DNI del autor:");
-			password = JOptionPane.showInputDialog("Ingrese la contraseña del autor:");
-			email = validarEmail("Ingrese el email del cliente:");
-
-			// Crear y agregar autor independiente
-			Autor autorIndependiente = new Autor(nombre, password, dni, email, true);
-			Indepen.add(autorIndependiente); // Lista global 'autores'
-
-			JOptionPane.showMessageDialog(null, "Autor independiente creado exitosamente.");
-			break;
-
-		case 2: // Crear Autor Tradicional
-			// Solicitar datos básicos del autor tradicional
-			nombre = validarCaracteres("Ingrese el nombre del autor:");
-			dni = validarDni("Ingrese el DNI del autor:");
-			password = JOptionPane.showInputDialog("Ingrese la contraseña del autor:");
-			email = validarEmail("Ingrese el email del cliente:");
-
-			// Solicitar la editorial
-			String editorial = validarCaracteres("Ingrese el nombre de la editorial:");
-			if (editorial != null && !editorial.trim().isEmpty()) {
-				Autor autorTradicional = new Autor(nombre, password, dni, email, false, editorial);
-				autorTradicional.setEditorial(editorial); // Método para establecer la editorial
-				autor.add(autorTradicional); // Lista global 'autores'
-				JOptionPane.showMessageDialog(null, "Autor tradicional creado exitosamente.");
-			} else {
-				JOptionPane.showMessageDialog(null, "Editorial no ingresada. No se pudo crear el autor tradicional.");
-			}
-
-		case 3: // Salir
-			JOptionPane.showMessageDialog(null, "Saliendo del sistema de creacion de usuarios.");
-			break;
-
-		default:
-			JOptionPane.showMessageDialog(null, "Opción no válida.");
-			break;
-		}
-
+	    // 📌 Guardar el usuario con su tipo
+	    controller.agregarUsuario(nuevoUsuario, tipoUsuario, datoAdicional1, datoAdicional2);
+	    JOptionPane.showMessageDialog(null, "Usuario registrado correctamente.");
 	}
 
-	// Método para iniciar sesión
-	public static void iniciarSesion() {
-		String email = JOptionPane.showInputDialog("Ingrese su email:");
-		String contrasena = JOptionPane.showInputDialog("Ingrese su contraseña:");
 
-		if (email == null || contrasena == null || email.trim().isEmpty() || contrasena.trim().isEmpty()) {
-			JOptionPane.showMessageDialog(null, "Debe ingresar ambos datos para iniciar sesión.");
-			return;
-		}
-
-		Usuario usuarioLogueado = null;
-
-		// Buscar al usuario en la lista global
-		for (Usuario usuario : usuarios) {
-			if (usuario.getMail().equalsIgnoreCase(email) && usuario.verificarPassword(contrasena)) {
-				usuarioLogueado = usuario;
-				break;
-			}
-		}
-
-		if (usuarioLogueado != null) {
-			JOptionPane.showMessageDialog(null,
-					"Bienvenido " + usuarioLogueado.getNombre() + "\nTipo: " + usuarioLogueado.getTipoUsuario());
-			usuarioLogueado.mostrarMenu(); // Polimorfismo: llama al menú correspondiente
-		} else {
-			JOptionPane.showMessageDialog(null, "Credenciales incorrectas.");
-		}
-	}
+	
 
 	public static String validarCaracteres(String mensaje) {
 		String palabra = "";

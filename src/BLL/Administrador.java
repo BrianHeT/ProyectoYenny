@@ -1,3 +1,4 @@
+package BLL;
 
 import java.util.LinkedList;
 
@@ -7,11 +8,39 @@ import javax.swing.JOptionPane;
 
 public class Administrador extends Usuario {
 
-    public Administrador(String nombre, String mail, int dni, String password) {
+	private int id;
+	
+	private String apellido;
+	
+	public Administrador(String nombre, String password, int dni, String mail, int id, String apellido) {
+		super(nombre, password, dni, mail);
+		this.id = id;
+		this.apellido = apellido;
+	}
+
+    public Administrador(String nombre, String mail, int dni, String password, String apellido) {
         super(nombre, password, dni, mail); // Pasa los argumentos al constructor de Usuario
+		this.apellido = apellido;
+
     }
 
-    @Override
+    public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getApellido() {
+		return apellido;
+	}
+
+	public void setApellido(String apellido) {
+		this.apellido = apellido;
+	}
+
+	@Override
     public String getTipoUsuario() {
         return "Administrador";
     }

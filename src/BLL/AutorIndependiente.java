@@ -1,9 +1,31 @@
+package BLL;
 import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
 
 public class AutorIndependiente extends Autor {
-    private LinkedList<Libro> librosEnviados;
+	private int id;
+    public AutorIndependiente(String nombre, String password, int dni, String mail, boolean independiente,
+			String editorial, int id) {
+		super(nombre, password, dni, mail, independiente, editorial);
+		this.id = id;
+        this.librosEnviados = new LinkedList<>();
+
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public void setLibrosEnviados(LinkedList<Libro> librosEnviados) {
+		this.librosEnviados = librosEnviados;
+	}
+
+	private LinkedList<Libro> librosEnviados;
 
     public AutorIndependiente(String nombre, String password, int dni, String mail) {
         super(nombre, password, dni, mail, true); // true = independiente

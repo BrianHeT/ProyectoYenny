@@ -1,15 +1,35 @@
+package BLL;
 
 import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
 
+import repository.TipoOpcionAutor;
+
 public class Autor extends Usuario {
+	private int id;
 	private boolean independiente;
 	private String editorial;
 	private LinkedList<Libro> librosEnviados;
 
 	public Autor(String nombre, String password, int dni, String mail, boolean independiente, String editorial) {
 		super(nombre, password, dni, mail);
+		this.independiente = independiente;
+		this.editorial = editorial;
+		this.librosEnviados = librosEnviados;
+	}
+
+	public Autor(String nombre, String password, int dni, String mail, int id, boolean independiente, String editorial) {
+		super(nombre, password, dni, mail);
+		this.id = id;
+		this.independiente = independiente;
+		this.editorial = editorial;
+		this.librosEnviados = librosEnviados;
+	}
+	
+	public Autor(String nombre, String password, int dni, String mail, int id, boolean independiente) {
+		super(nombre, password, dni, mail);
+		this.id = id;
 		this.independiente = independiente;
 		this.editorial = editorial;
 		this.librosEnviados = librosEnviados;
@@ -116,4 +136,51 @@ public class Autor extends Usuario {
 	public LinkedList<Libro> getLibrosEnviados() {
 		return librosEnviados;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	 public void mostrarMenu2() {
+	        int opcion;
+	        do {
+	            opcion = JOptionPane.showOptionDialog(null, "Menú de Autor", "Opciones de Publicación",
+	                    JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
+	                    new String[]{"Gestionar Libros", "Ver Estadísticas", "Publicar Historia", "Salir"}, "Gestionar Libros");
+
+	            switch (opcion) {
+	                case 0:
+	                    JOptionPane.showMessageDialog(null, "Accediendo a gestión de libros...");
+	                    // Implementar lógica de gestión de libros
+	                    break;
+	                case 1:
+	                    JOptionPane.showMessageDialog(null, "Mostrando estadísticas...");
+	                    // Implementar lógica de estadísticas
+	                    break;
+	                case 2:
+	                    break;
+	                case 3:
+	                    JOptionPane.showMessageDialog(null, "Cerrando sesión de autor...");
+	                    break;
+	            }
+	        } while (opcion != 3);
+	    }
+
 }

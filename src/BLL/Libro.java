@@ -1,7 +1,10 @@
+package BLL;
 import java.util.LinkedList;
 import javax.swing.JOptionPane;
 
 public class Libro {
+	
+	private int id;
     private String titulo;
     private String sinopsis;
     private double precio;
@@ -10,7 +13,22 @@ public class Libro {
 
     private static LinkedList<Libro> listaLibros = new LinkedList<>();
 
-    public Libro(String titulo, String sinopsis, double precio) {
+    
+    
+    
+    
+    public Libro(int id, String titulo, String sinopsis, double precio, String estado) {
+		super();
+		this.id = id;
+		this.titulo = titulo;
+		this.sinopsis = sinopsis;
+		this.precio = precio;
+		this.estado = "Pendiente";
+        listaLibros.add(this);
+
+	}
+
+	public Libro(String titulo, String sinopsis, double precio) {
         this.titulo = titulo;
         this.sinopsis = sinopsis;
         this.precio = precio;

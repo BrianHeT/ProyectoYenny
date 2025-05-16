@@ -1,12 +1,32 @@
+package BLL;
 
 import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
 
-public class Cliente extends Usuario {
+import repository.TipoOpcionCliente;
 
+public class Cliente extends Usuario {
+	
+	private int id;
 	private String direccion;
 	private Carrito Carrito;
+	
+	public Cliente(String nombre, String password, int dni, String mail, int id, String direccion) {
+		super(nombre, password, dni, mail);
+		this.id = id;
+		this.direccion = direccion;
+		this.Carrito = new Carrito(); // Inicializamos el carrito
+
+	}
+
+
+
+	public Cliente(String nombre, String password, int dni, String mail, String direccion) {
+		super(nombre, password, dni, mail);
+		this.direccion = direccion;
+		this.Carrito = new Carrito(); // Inicializamos el carrito
+	}
 
 	
 
@@ -26,11 +46,7 @@ public class Cliente extends Usuario {
 		Carrito = carrito;
 	}
 
-	public Cliente(String nombre, String password, int dni, String mail, String direccion) {
-		super(nombre, password, dni, mail);
-		this.direccion = direccion;
-		this.Carrito = new Carrito(); // Inicializamos el carrito
-	}
+	
 
 	@Override
 	public String getTipoUsuario() {
@@ -93,9 +109,9 @@ public class Cliente extends Usuario {
 	        Libro libro3 = new Libro("El Principito", "Antoine de Saint-Exupéry", 15.75);
 	        
 	        String catalogo = "Catálogo de Libros:\n"
-	                        + "1) " + libro1.toString() + "\n"
-	                        + "2) " + libro2.toString() + "\n"
-	                        + "3) " + libro3.toString();
+	                        + "1) " + libro1.getTitulo() + "\n"
+	                        + "2) " + libro2.getTitulo() + "\n"
+	                        + "3) " + libro3.getTitulo();
 	        JOptionPane.showMessageDialog(null, catalogo, "Catálogo", JOptionPane.INFORMATION_MESSAGE);
 	    }
 		

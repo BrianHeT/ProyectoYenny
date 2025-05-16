@@ -1,12 +1,21 @@
+package BLL;
 
 public class ItemCarrito {
 
-
-	
+		private int id;
 	    private Libro libro;
 	    private int cantidad;
 	    
-	    public ItemCarrito(Libro libro, int cantidad) {
+	    
+	    
+	    public ItemCarrito(int id, Libro libro, int cantidad) {
+			super();
+			this.id = id;
+			this.libro = libro;
+			this.cantidad = cantidad;
+		}
+
+		public ItemCarrito(Libro libro, int cantidad) {
 	        this.libro = libro;
 	        this.cantidad = cantidad;
 	    }
