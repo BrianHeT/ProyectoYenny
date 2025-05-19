@@ -12,18 +12,16 @@ public class Cliente extends Usuario {
 	private String direccion;
 	private Carrito Carrito;
 	
-	public Cliente(String nombre, String password, int dni, String mail, int id, String direccion) {
-		super(nombre, password, dni, mail);
-		this.id = id;
-		this.direccion = direccion;
-		this.Carrito = new Carrito(); // Inicializamos el carrito
+	 public Cliente(int id, String nombre, String password, int dni, String mail, String direccion) {
+	        super(id, nombre, password, dni, mail);
+	        this.direccion = direccion;
+	    }
 
-	}
 
 
 
 	public Cliente(String nombre, String password, int dni, String mail, String direccion) {
-		super(nombre, password, dni, mail);
+		super(dni, nombre, password, dni, mail);
 		this.direccion = direccion;
 		this.Carrito = new Carrito(); // Inicializamos el carrito
 	}
@@ -69,8 +67,6 @@ public class Cliente extends Usuario {
 			switch (opcion) {
 			case 0:
 				JOptionPane.showMessageDialog(null, "Mostrando Catálogo... [Prototipo]");
-				mostrarCatalogo();
-				 agregarLibroAlCarrito();
 				break;
 			case 1:
 				JOptionPane.showMessageDialog(null, "Mostrando Promociones... [Prototipo]");
@@ -81,7 +77,6 @@ public class Cliente extends Usuario {
 				break;
 			case 3:
 				JOptionPane.showMessageDialog(null, "Realizando Compra... [Prototipo]");
-			    realizarPago();
 				break;
 			case 4:
 				JOptionPane.showMessageDialog(null, "Ver Estado de envio... [Prototipo]");
@@ -102,62 +97,10 @@ public class Cliente extends Usuario {
 		
 	}
 	// metodo para ver la lista de libros --aun no implementado--
-	  private void mostrarCatalogo() {
-	        // Se crean algunos libros de ejemplo
-	        Libro libro1 = new Libro("Cien Años de Soledad", "Gabriel García Márquez", 25.50);
-	        Libro libro2 = new Libro("1984", "George Orwell", 20.00);
-	        Libro libro3 = new Libro("El Principito", "Antoine de Saint-Exupéry", 15.75);
-	        
-	        String catalogo = "Catálogo de Libros:\n"
-	                        + "1) " + libro1.getTitulo() + "\n"
-	                        + "2) " + libro2.getTitulo() + "\n"
-	                        + "3) " + libro3.getTitulo();
-	        JOptionPane.showMessageDialog(null, catalogo, "Catálogo", JOptionPane.INFORMATION_MESSAGE);
-	    }
+	
 		
 		 // Método para agregar un libro al carrito
-	    private void agregarLibroAlCarrito() {
-	        // Para este prototipo, pediremos al usuario que ingrese el número del libro del catálogo
-	        String opcion = JOptionPane.showInputDialog("Ingrese el número del libro a agregar (1, 2 o 3):");
-	        int num;
-	        try {
-	            num = Integer.parseInt(opcion.trim());
-	        } catch (NumberFormatException e) {
-	            JOptionPane.showMessageDialog(null, "Opción inválida. Debe ser un número.");
-	            return;
-	        }
-	        Libro libroSeleccionado = null;
-	        switch (num) {
-	            case 1:
-	                libroSeleccionado = new Libro("Cien Años de Soledad", "Gabriel García Márquez", 25.50);
-	                break;
-	            case 2:
-	                libroSeleccionado = new Libro("1984", "George Orwell", 20.00);
-	                break;
-	            case 3:
-	                libroSeleccionado = new Libro("El Principito", "Antoine de Saint-Exupéry", 15.75);
-	                break;
-	            default:
-	                JOptionPane.showMessageDialog(null, "Libro no encontrado en el catálogo.");
-	                return;
-	        }
-	        String cant = JOptionPane.showInputDialog("Ingrese la cantidad de unidades:");
-	        int cantidad;
-	        try {
-	            cantidad = Integer.parseInt(cant.trim());
-	        } catch (NumberFormatException e) {
-	            JOptionPane.showMessageDialog(null, "Cantidad inválida.");
-	            return;
-	        }
-	        Carrito.agregarItem(libroSeleccionado, cantidad);
-	        JOptionPane.showMessageDialog(null, "Libro agregado al carrito.");
-	    }
-	    public void realizarPago() {
-	        GestionPagos gestionPagos = GestionPagos.getInstance(); // Obtener la instancia única
-	        gestionPagos.realizarPago(this); // Realizar el pago
-	    }
-
-	    
+	 
 
 	    public void verLibrosDelCarrito() {
 	        if (Carrito.getItems().isEmpty()) {

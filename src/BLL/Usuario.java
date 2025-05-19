@@ -18,52 +18,51 @@ public abstract  class Usuario implements Encriptador {
 	private static LinkedList<Usuario> usuarios = new LinkedList<>();
 	private static LinkedList<Cliente> clientes = new LinkedList<>();
 	private static LinkedList<Autor> autor = new LinkedList<>();
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	private static LinkedList<Autor> Indepen = new LinkedList<>();
-
-	public static LinkedList<Autor> getAutor() {
-		return autor;
-	}
-
-	public static void setAutor(LinkedList<Autor> autor) {
-		Usuario.autor = autor;
-	}
-
-	public static LinkedList<Autor> getIndepen() {
-		return Indepen;
-	}
-
-	public static void setIndepen(LinkedList<Autor> indepen) {
-		Indepen = indepen;
-	}
-
-	public Usuario(String nombre, String password, int dni, String mail) {
-		this.nombre = nombre;
-		this.password =  encriptar(password);
-		this.mail = mail;
-		this.dni = dni;
-		usuarios.add(this);
-	}
+	
 	
 
-	public Usuario(int id, String mail, String nombre, int dni, String password) {
-		super();
-		this.id = id;
-		this.mail = mail;
-		this.nombre = nombre;
-		this.dni = dni;
-		this.password =  encriptar(password);
-	}
-	 public Usuario() {
-	      
+   
+
+    // ✅ Constructor con `id` para objetos recuperados de la BD
+	  public Usuario(int id, String nombre, String password, int dni, String mail) {
+	        this.id = id; // 📌 Verifica que `id` se almacene correctamente
+	        this.nombre = nombre;
+	        this.password = password;
+	        this.dni = dni;
+	        this.mail = mail;
+
+	        System.out.println("✅ Usuario creado correctamente con ID: " + this.id); // 📌 Confirmación en consola
 	    }
+
+
+
+	
+	 
+	 public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		private static LinkedList<Autor> Indepen = new LinkedList<>();
+
+		public static LinkedList<Autor> getAutor() {
+			return autor;
+		}
+
+		public static void setAutor(LinkedList<Autor> autor) {
+			Usuario.autor = autor;
+		}
+
+		public static LinkedList<Autor> getIndepen() {
+			return Indepen;
+		}
+
+		public static void setIndepen(LinkedList<Autor> indepen) {
+			Indepen = indepen;
+		}
 
 	public String getNombre() {
 
@@ -154,11 +153,16 @@ public abstract  class Usuario implements Encriptador {
 
 
 	// 📌 Método para capturar datos y enviarlos al controlador
+	// 📌 Método para capturar datos y enviarlos al controlador
 	public static void registrarUsuario(ControllerUsuario controller) {
 	    String nombre = JOptionPane.showInputDialog("Ingrese su nombre:");
 	    String mail = JOptionPane.showInputDialog("Ingrese su correo:");
 	    int dni = Integer.parseInt(JOptionPane.showInputDialog("Ingrese su DNI:"));
 	    String password = JOptionPane.showInputDialog("Ingrese su contraseña:");
+
+	    // 📌 Obtener el próximo ID disponible en la BD
+	    int nuevoId = controller.obtenerNuevoIdUsuario();
+	    System.out.println("✅ ID asignado: " + nuevoId); // 📌 Verificación en consola
 
 	    // 📌 Preguntar el tipo de usuario
 	    String[] opciones = {"Administrador", "Cliente", "Autor"};
@@ -175,18 +179,19 @@ public abstract  class Usuario implements Encriptador {
 	    switch (tipoUsuario.toLowerCase()) {
 	        case "administrador":
 	            datoAdicional1 = JOptionPane.showInputDialog("Ingrese su apellido:");
-	            nuevoUsuario = new Administrador(nombre, mail, dni, password, datoAdicional1);
+	            nuevoUsuario = new Administrador(nuevoId, nombre, mail, dni, password, datoAdicional1);
 	            break;
 	        case "cliente":
 	            datoAdicional1 = JOptionPane.showInputDialog("Ingrese su dirección:");
-	            nuevoUsuario = new Cliente(nombre, password, dni, mail, datoAdicional1);
+	            nuevoUsuario = new Cliente(nuevoId, nombre, password, dni, mail, datoAdicional1);
 	            break;
 	        case "autor":
 	            boolean independiente = JOptionPane.showConfirmDialog(null, "¿Es autor independiente?", "Autor Independiente",
 	                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
 	            datoAdicional1 = String.valueOf(independiente);
 	            datoAdicional2 = independiente ? "Independiente" : JOptionPane.showInputDialog("Ingrese el nombre de la editorial:");
-	            nuevoUsuario = new Autor(nombre, password, dni, mail, independiente, datoAdicional2);
+
+	            nuevoUsuario = new Autor(nuevoId, nombre, password, dni, mail, independiente, datoAdicional2); // 📌 Se pasa `nuevoId`
 	            break;
 	        default:
 	            JOptionPane.showMessageDialog(null, "Error: Tipo de usuario inválido.");
@@ -195,11 +200,31 @@ public abstract  class Usuario implements Encriptador {
 
 	    // 📌 Guardar el usuario con su tipo
 	    controller.agregarUsuario(nuevoUsuario, tipoUsuario, datoAdicional1, datoAdicional2);
-	    JOptionPane.showMessageDialog(null, "Usuario registrado correctamente.");
+	    JOptionPane.showMessageDialog(null, "✅ Usuario registrado correctamente.");
 	}
 
 
-	
+	public void mostrarLibros() {
+	    ControllerUsuario controller = new ControllerUsuario();
+	    LinkedList<Libro> libros = controller.obtenerLibros();
+
+	    if (libros.isEmpty()) {
+	        JOptionPane.showMessageDialog(null, "📭 No hay libros registrados en la base de datos.");
+	        return;
+	    }
+
+	    StringBuilder lista = new StringBuilder("📚 Lista de libros disponibles:\n\n");
+
+	    for (Libro libro : libros) {
+	        lista.append("🔹 **Título:** ").append(libro.getTitulo()).append("\n")
+	             .append("   📖 **Sinopsis:** ").append(libro.getsipnosis()).append("\n")
+	             .append("   💰 **Precio:** ").append(libro.getPrecio()).append("\n")
+	             .append("   📦 **Stock:** ").append(libro.getStock()).append("\n")
+	             .append("   🏷️ **Estado:** ").append(libro.getEstado()).append("\n\n");
+	    }
+
+	    JOptionPane.showMessageDialog(null, lista.toString(), "Libros Disponibles", JOptionPane.INFORMATION_MESSAGE);
+	}
 
 	public static String validarCaracteres(String mensaje) {
 		String palabra = "";

@@ -7,41 +7,20 @@ import javax.swing.JOptionPane;
 import repository.TipoOpcionAutor;
 
 public class Autor extends Usuario {
-	private int id;
 	private boolean independiente;
-	private String editorial;
-	private LinkedList<Libro> librosEnviados;
+    private String editorial;
+    private LinkedList<Libro> librosEnviados;
 
-	public Autor(String nombre, String password, int dni, String mail, boolean independiente, String editorial) {
-		super(nombre, password, dni, mail);
-		this.independiente = independiente;
-		this.editorial = editorial;
-		this.librosEnviados = librosEnviados;
-	}
+    // ✅ Corrección: Agregar `id` en el constructor y pasarlo a `Usuario`
+    public Autor(int id, String nombre, String password, int dni, String mail, boolean independiente, String editorial) {
+        super(id, nombre, password, dni, mail); // 📌 Ahora `id` se asigna correctamente
+        this.independiente = independiente;
+        this.editorial = editorial;
+        this.librosEnviados = new LinkedList<>(); // 📌 Se inicializa correctamente
+    }
 
-	public Autor(String nombre, String password, int dni, String mail, int id, boolean independiente, String editorial) {
-		super(nombre, password, dni, mail);
-		this.id = id;
-		this.independiente = independiente;
-		this.editorial = editorial;
-		this.librosEnviados = librosEnviados;
-	}
+
 	
-	public Autor(String nombre, String password, int dni, String mail, int id, boolean independiente) {
-		super(nombre, password, dni, mail);
-		this.id = id;
-		this.independiente = independiente;
-		this.editorial = editorial;
-		this.librosEnviados = librosEnviados;
-	}
-
-	public Autor(String nombre, String password, int dni, String mail, boolean independiente) {
-		super(nombre, password, dni, mail);
-		this.independiente = independiente;
-		this.editorial = editorial;
-		this.librosEnviados = librosEnviados;
-
-	}
 
 	public void setLibrosEnviados(LinkedList<Libro> librosEnviados) {
 		this.librosEnviados = librosEnviados;
@@ -102,22 +81,7 @@ public class Autor extends Usuario {
 
 	}
 
-	public void enviarLibro() {
-		String titulo = Usuario.validarCaracteres("Ingrese el título del libro:");
-		String sinopsis = JOptionPane.showInputDialog("Ingrese una sinopsis:");
-		double precio = 0;
-
-		try {
-			precio = Double.parseDouble(JOptionPane.showInputDialog("Ingrese el precio:"));
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(null, "Precio inválido.");
-			return;
-		}
-
-		Libro nuevoLibro = new Libro(titulo, sinopsis, precio);
-		librosEnviados.add(nuevoLibro);
-		JOptionPane.showMessageDialog(null, "Libro enviado correctamente.");
-	}
+	
 
 	public void verLibros() {
 		if (librosEnviados.isEmpty()) {
