@@ -29,12 +29,15 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository,E
         Usuario usuario = null;
 
         try {
-            PreparedStatement stmt = con.prepareStatement(
-                "SELECT id_usuario, nombre, dni, password, tipo_usuario FROM usuario WHERE mail = ?"
-            );
-            stmt.setString(1, mail);
+        	PreparedStatement stmt = con.prepareStatement(
+        		    "SELECT u.id_usuario, u.nombre, u.dni, u.password, u.tipo_usuario, a.independiente, a.editorial " +
+        		    "FROM usuario u " +
+        		    "LEFT JOIN autor a ON u.id_usuario = a.fk_usuario " +
+        		    "WHERE u.mail = ?"
+        		);
+        		stmt.setString(1, mail);
+        		ResultSet rs = stmt.executeQuery();
 
-            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 int id = rs.getInt("id_usuario");
