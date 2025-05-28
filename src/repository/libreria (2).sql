@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-05-2025 a las 06:43:19
+-- Tiempo de generación: 28-05-2025 a las 06:09:07
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -125,8 +125,8 @@ CREATE TABLE `libro` (
 --
 
 INSERT INTO `libro` (`id_libro`, `titulo`, `sipnosis`, `precio`, `stock`, `estado`) VALUES
-(5, '1984', 'Distopía de Orwell', 1200, 15, 'Disponible'),
-(6, 'El principito', 'Fábula filosófica', 1000, 30, 'Disponible'),
+(5, '1984', 'Distopía de Orwell', 1200, 10, 'Disponible'),
+(6, 'El principito', 'Fábula filosófica', 1000, 15, 'Disponible'),
 (7, 'Cien años de soledad', 'Obra de García Márquez', 1800, 25, 'Disponible'),
 (8, 'La Odisea', 'Épica de Homero', 1400, 18, 'Disponible'),
 (9, 'La Divina Comedia', 'Obra de Dante', 1600, 22, 'Disponible'),
@@ -143,7 +143,8 @@ INSERT INTO `libro` (`id_libro`, `titulo`, `sipnosis`, `precio`, `stock`, `estad
 (20, 'El Alquimista', 'Obra de Paulo Coelho', 1450, 23, 'Disponible'),
 (21, 'El Código Da Vinci', 'Novela de misterio de Dan Brown', 1600, 20, 'Disponible'),
 (22, 'Las Crónicas de Narnia', 'Mundo fantástico de C.S. Lewis', 1550, 26, 'Disponible'),
-(23, 'Sherlock Holmes', 'Investigaciones de Arthur Conan Doyle', 1500, 24, 'Disponible');
+(23, 'Sherlock Holmes', 'Investigaciones de Arthur Conan Doyle', 1500, 24, 'Disponible'),
+(24, 'asd', 'asd', 213, 10, 'disponible');
 
 -- --------------------------------------------------------
 
@@ -156,6 +157,18 @@ CREATE TABLE `transaccion` (
   `total` int(11) NOT NULL,
   `fk_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Volcado de datos para la tabla `transaccion`
+--
+
+INSERT INTO `transaccion` (`id_transaccion`, `total`, `fk_cliente`) VALUES
+(1, 16800, 12345679),
+(2, 10000, 12345679),
+(3, 2400, 12345679),
+(4, 8400, 12345679),
+(5, 15000, 12345679),
+(6, 8520, 12345679);
 
 -- --------------------------------------------------------
 
@@ -273,13 +286,13 @@ ALTER TABLE `itemcarrito`
 -- AUTO_INCREMENT de la tabla `libro`
 --
 ALTER TABLE `libro`
-  MODIFY `id_libro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_libro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `transaccion`
 --
 ALTER TABLE `transaccion`
-  MODIFY `id_transaccion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_transaccion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
