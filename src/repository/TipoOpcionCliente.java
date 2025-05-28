@@ -1,5 +1,5 @@
 package repository;
 
 public enum TipoOpcionCliente {
-    VerCatalogo,Promociones, VerCarrito, RealizarCompra,EstadoEnvio,MisCompras,CambiosyDevoluciones,Salir;
+   IngresarSaldo,VerSaldo, VerCatalogo,Promociones, VerCarrito, RealizarCompra,EstadoEnvio,MisCompras,CambiosyDevoluciones,Salir;
 }

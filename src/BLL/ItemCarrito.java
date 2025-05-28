@@ -36,6 +36,9 @@ public class ItemCarrito {
 	    public String toString() {
 	        return libro.toString() + " x " + cantidad;
 	    }
+	    
+	    
+	    
 	}
 
 

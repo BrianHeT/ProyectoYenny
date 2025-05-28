@@ -3,6 +3,8 @@ package BLL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 public class Carrito {
 	private int id;
 	private List<ItemCarrito> items;
@@ -57,4 +59,8 @@ public class Carrito {
 		sb.append("Total: $").append(calcularTotal());
 		return sb.toString();
 	}
+	
+	
+
+	
 }

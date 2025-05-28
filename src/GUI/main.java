@@ -7,7 +7,7 @@ import BLL.Autor;
 import BLL.Cliente;
 import BLL.Usuario;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
         ControllerUsuario controller = new ControllerUsuario();
 

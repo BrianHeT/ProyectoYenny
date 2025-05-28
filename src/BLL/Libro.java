@@ -10,8 +10,10 @@ public class Libro {
     private double precio;
     private int stock;
     private String estado; // nuevo campo
+    private int ventas;
 
-    private static LinkedList<Libro> listaLibros = new LinkedList<>();
+
+	private static LinkedList<Libro> listaLibros = new LinkedList<>();
 
     
     
@@ -24,6 +26,14 @@ public class Libro {
         this.estado = estado;
     }
     
+    public int getVentas() {
+    	return ventas;
+    }
+    
+    
+    public void setVentas(int ventas) {
+    	this.ventas = ventas;
+    }
   
     public int getId() {
 		return id;

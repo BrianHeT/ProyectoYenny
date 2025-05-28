@@ -15,8 +15,37 @@ public class Cliente extends Usuario {
 	private int id;
 	private String direccion;
 	private Carrito Carrito;
+	private double saldo = 0;
 	
-	 public Cliente(int id, String nombre, String password, int dni, String mail, String direccion) {
+	 public int getId() {
+		return id;
+	}
+
+
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+
+
+	public double getSaldo() {
+		return saldo;
+	}
+
+
+
+
+	public void setSaldo(double saldo) {
+		saldo = saldo;
+	}
+
+
+
+
+	public Cliente(int id, String nombre, String password, int dni, String mail, String direccion) {
 	        super(id, nombre, password, dni, mail);
 	        this.direccion = direccion;
 	    }
@@ -59,87 +88,109 @@ public class Cliente extends Usuario {
 	@Override
 	public void mostrarMenu() {        
 	    ControllerUsuario controller = new ControllerUsuario(); // Instancia de ControllerUsuario
-	    int opcion;
+	    TipoOpcionCliente opcion;
 
 	    do {
-	        opcion = JOptionPane.showOptionDialog(null, "Seleccione una opción", "Gestión de Usuarios",
-	                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, TipoOpcionCliente.values(),
-	                TipoOpcionCliente.values()[0]);
+	    	opcion  = (TipoOpcionCliente) JOptionPane.showInputDialog(
+	            null,
+	            "Seleccione una opción",
+	            "Gestión de Usuarios",
+	            JOptionPane.QUESTION_MESSAGE,
+	            null,
+	            TipoOpcionCliente.values(),
+	            TipoOpcionCliente.values()[0]
+	        );
+	        
+	        if (opcion == null) {
+	            JOptionPane.showMessageDialog(null, "Operación cancelada.");
+	            return;
+	        }
 
 	        switch (opcion) {
-	            case 0:
-	                JOptionPane.showMessageDialog(null, "Mostrando Catálogo...");
-	                verLibrosDisponibles();
-	              	LinkedList<Libro> libros = controller.obtenerLibros();
+	        case IngresarSaldo:
+	            agregarSaldo();
+	            break;
 
-	            	if (libros.isEmpty()) {
-	            	    JOptionPane.showMessageDialog(null, "No hay libros disponibles.", "Error", JOptionPane.ERROR_MESSAGE);
-	            	    return;
-	            	}
+	        case VerSaldo:
+	            JOptionPane.showMessageDialog(null, "Tu saldo actual es: $" + getSaldo(), "saldo disponible", JOptionPane.INFORMATION_MESSAGE );
+	            break;
+	            
+	            case  VerCatalogo:
+	            	 JOptionPane.showMessageDialog(null, "Mostrando Catálogo...");
+		                verLibrosDisponibles();
+		              	LinkedList<Libro> libros = controller.obtenerLibros();
 
-	            	// Crear un array con los títulos de los libros
-	            	String[] opcionesLibros = new String[libros.size()];
-	            	for (int i = 0; i < libros.size(); i++) {
-	            	    opcionesLibros[i] = libros.get(i).getId() + " - " + libros.get(i).getTitulo(); // ID y título
-	            	}
+		            	if (libros.isEmpty()) {
+		            	    JOptionPane.showMessageDialog(null, "No hay libros disponibles.", "Error", JOptionPane.ERROR_MESSAGE);
+		            	    return;
+		            	}
 
-	            	// Mostrar lista desplegable
-	            	JComboBox<String> comboLibros = new JComboBox<>(opcionesLibros);
-	            	JOptionPane.showMessageDialog(null, comboLibros, "Seleccione un libro", JOptionPane.QUESTION_MESSAGE);
+		            	// Crear un array con los títulos de los libros
+		            	String[] opcionesLibros = new String[libros.size()];
+		            	for (int i = 0; i < libros.size(); i++) {
+		            	    opcionesLibros[i] = libros.get(i).getId() + " - " + libros.get(i).getTitulo(); // ID y título
+		            	}
 
-	            	int indexSeleccionado = comboLibros.getSelectedIndex();
-	            	if (indexSeleccionado == -1) {
-	            	    JOptionPane.showMessageDialog(null, "No se seleccionó ningún libro.", "Error", JOptionPane.ERROR_MESSAGE);
-	            	    return;
-	            	}
+		            	// Mostrar lista desplegable
+		            	JComboBox<String> comboLibros = new JComboBox<>(opcionesLibros);
+		            	JOptionPane.showMessageDialog(null, comboLibros, "Seleccione un libro", JOptionPane.QUESTION_MESSAGE);
 
-	            	// Obtener el libro seleccionado
-	            	Libro libroSeleccionado = libros.get(indexSeleccionado);
+		            	int indexSeleccionado = comboLibros.getSelectedIndex();
+		            	if (indexSeleccionado == -1) {
+		            	    JOptionPane.showMessageDialog(null, "No se seleccionó ningún libro.", "Error", JOptionPane.ERROR_MESSAGE);
+		            	    return;
+		            	}
 
-	            	// Pedir cantidad
-	            	String cantidadStr = JOptionPane.showInputDialog("Ingrese la cantidad:");
-	            	try {
-	            	    int cantidad = Integer.parseInt(cantidadStr);
-	            	    agregarLibroAlCarrito(libroSeleccionado.getId(), cantidad); // Agregar al carrito
-	            	    JOptionPane.showMessageDialog(null, "Libro agregado: " + libroSeleccionado.getTitulo() + " x " + cantidad);
-	            	} catch (NumberFormatException e) {
-	            	    JOptionPane.showMessageDialog(null, "Ingrese una cantidad válida.", "Error", JOptionPane.ERROR_MESSAGE);
-	            	}
+		            	// Obtener el libro seleccionado
+		            	Libro libroSeleccionado = libros.get(indexSeleccionado);
 
-	            case 1:
-	            	
+		            	// Pedir cantidad
+		            	String cantidadStr = JOptionPane.showInputDialog("Ingrese la cantidad:");
+		            	try {
+		            	    int cantidad = Integer.parseInt(cantidadStr);
+		            	    agregarLibroAlCarrito(libroSeleccionado.getId(), cantidad); // Agregar al carrito
+		            	    JOptionPane.showMessageDialog(null, "Libro agregado: " + libroSeleccionado.getTitulo() + " x " + cantidad);
+		            	} catch (NumberFormatException e) {
+		            	    JOptionPane.showMessageDialog(null, "Ingrese una cantidad válida.", "Error", JOptionPane.ERROR_MESSAGE);
+		            	}
+		            	
+	            case Promociones:
+	                JOptionPane.showMessageDialog(null, "No hay promociones disponibles actualmente.");
+	                break;
+		            	
+	            case RealizarCompra:
+	            	realizarCompra(); // Llamar al método de compra
+	            	break;
 
-	            case 2:
+	            case VerCarrito:
 	            	verLibrosDelCarrito();
 	                break;
 
-	            case 3:
-	                realizarCompra(); // Llamar al método de compra
-	                break;
 
-	            case 4:
+	            case EstadoEnvio:
 	                JOptionPane.showMessageDialog(null, "Ver Estado de Envío... [Prototipo]");
 	                break;
 
-	            case 5:
+	            case MisCompras:
 	                JOptionPane.showMessageDialog(null, "Ver Mis Compras... ");
 	                verMisCompras(); // Ver historial de compras
 
 	                break;
 
-	            case 6:
+	            case CambiosyDevoluciones:
 	                JOptionPane.showMessageDialog(null, "Cambios y Devoluciones... [Prototipo]");
 	                break;
 
-	            case 7:
+	            case Salir:
 	                JOptionPane.showMessageDialog(null, "Saliendo del sistema...");
 	                break;
 
 	            default:
 	                break;
 	        }
-	    } while (opcion != 7);
-	}
+	    } while (opcion != TipoOpcionCliente.Salir);
+	    }
+	    
 	// metodo para ver la lista de libros --aun no implementado--
 	
 		
@@ -188,15 +239,38 @@ public class Cliente extends Usuario {
 	        }
 	        JOptionPane.showMessageDialog(null, "Libro no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
 	    }
+	    
+	    
 	    public void realizarCompra() {
 	        if (Carrito.getItems().isEmpty()) {
 	            JOptionPane.showMessageDialog(null, "El carrito está vacío. No puedes realizar una compra.", "Error", JOptionPane.ERROR_MESSAGE);
 	            return;
 	        }
 
-	        GestionPagos gestionPagos = GestionPagos.getInstance(); // Obtener instancia de GestionPagos
-	        gestionPagos.realizarPago(this); // Enviar el cliente para que gestione la compra
+	        double total = Carrito.calcularTotal();
+
+	        if (saldo < total) {
+	            JOptionPane.showMessageDialog(null, "No tenés saldo suficiente.\nSaldo disponible: $" + saldo + "\nTotal de la compra: $" + total, "Saldo insuficiente", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        
+	        saldo -= total;
+
+	       
+	        for (ItemCarrito item : Carrito.getItems()) {
+	            Libro libro = item.getLibro();
+	            int nuevasVentas = libro.getVentas() + item.getCantidad();
+	            libro.setVentas(nuevasVentas);
+	        }
+
+	        
+	        Carrito.vaciar();
+
+	        
+	        JOptionPane.showMessageDialog(null, "Compra realizada con éxito.\nSe descontaron $" + total + " de tu saldo.\nSaldo restante: $" + saldo, "Compra exitosa", JOptionPane.INFORMATION_MESSAGE);
 	    }
+
 	    public void verLibrosDelCarrito() {
 	        if (Carrito.getItems().isEmpty()) {
 	            JOptionPane.showMessageDialog(null, "El carrito está vacío.", "Carrito de Compras", JOptionPane.INFORMATION_MESSAGE);
@@ -228,6 +302,32 @@ public class Cliente extends Usuario {
 	        }
 
 	        JOptionPane.showMessageDialog(null, historialCompras.toString(), "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
+	    }
+	    
+	    public void agregarSaldo() {
+	        try {
+	            double monto = Double.parseDouble(JOptionPane.showInputDialog("Ingresar un monto"));
+
+	            if (monto <= 0) {
+	                JOptionPane.showMessageDialog(null, "El monto debe ser mayor a 0");
+	            } else {
+	                saldo += monto;
+	                JOptionPane.showMessageDialog(null, "El monto se ha agregado correctamente.\nSaldo actual: $" + saldo);
+	            }
+
+	        } catch (NumberFormatException e) {
+	            JOptionPane.showMessageDialog(null, "Ingrese un número válido", "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+	    }
+	    public boolean descontarSaldo(double monto) {
+	    	
+	    	
+	    	if (monto > 0 && saldo >= monto) {
+	    		saldo -= monto;
+	    		return true;
+				
+			}
+	    	return false;
 	    }
 
 }
