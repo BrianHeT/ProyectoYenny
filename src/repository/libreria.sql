@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-05-2025 a las 06:09:07
+-- Tiempo de generación: 07-06-2025 a las 04:47:58
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -81,15 +81,20 @@ CREATE TABLE `carrito` (
 CREATE TABLE `cliente` (
   `id_cliente` int(11) NOT NULL,
   `direccion` varchar(45) NOT NULL,
-  `fk_usuario` int(11) NOT NULL
+  `fk_usuario` int(11) NOT NULL,
+  `saldo` double DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Volcado de datos para la tabla `cliente`
 --
 
-INSERT INTO `cliente` (`id_cliente`, `direccion`, `fk_usuario`) VALUES
-(1, 'guatemala 5539', 2);
+INSERT INTO `cliente` (`id_cliente`, `direccion`, `fk_usuario`, `saldo`) VALUES
+(1, 'guatemala 5539', 2, 0),
+(2, 'avcorrientes', 9, 0),
+(3, 'avcorrientes', 10, 0),
+(4, 'asd', 11, 0),
+(5, 'avcorrientes', 12, 0);
 
 -- --------------------------------------------------------
 
@@ -193,7 +198,11 @@ INSERT INTO `usuario` (`id_usuario`, `nombre`, `mail`, `dni`, `password`, `tipo_
 (1, 'hector', 'hector@hector', 12345678, '123', 'Administrador'),
 (2, 'stefaniaa', 'stefania@medinaa', 12345679, '123', 'Cliente'),
 (6, 'fanny', 'fanny@luz', 12345677, '123', 'Autor'),
-(7, 'ghama', 'ghama@sueltael10', 12345699, '123', 'Autor');
+(7, 'ghama', 'ghama@sueltael10', 12345699, '123', 'Autor'),
+(9, 'Brian', 'brian@libreria.com', 43241445, 'yenny', 'Cliente'),
+(10, 'brian', 'brian1@gmail.com', 43241445, 'yenny', 'Cliente'),
+(11, 'asd', 'asd@gmail.com', 12345678, 'dvg', 'Cliente'),
+(12, 'brian', 'brian@yenny.com', 43241445, 'bhqqb', 'Cliente');
 
 --
 -- Índices para tablas volcadas
@@ -274,7 +283,7 @@ ALTER TABLE `carrito`
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `itemcarrito`
@@ -298,7 +307,7 @@ ALTER TABLE `transaccion`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
