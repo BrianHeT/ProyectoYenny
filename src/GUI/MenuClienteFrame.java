@@ -14,10 +14,12 @@ public class MenuClienteFrame extends JFrame {
     private ControllerUsuario controllerUsuario;
 
 
-    public MenuClienteFrame(Cliente cliente) {
+    public MenuClienteFrame(Cliente cliente, ControllerUsuario controllerUsuario) {
     	
     	  this.cliente = cliente;
+    	  
     	    this.controllerUsuario = controllerUsuario;
+    	    this.cliente.setController(controllerUsuario);
         setTitle("Menú Cliente");
         setSize(400, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,7 +38,7 @@ public class MenuClienteFrame extends JFrame {
             double saldoAntes = cliente.getSaldo();
             cliente.agregarSaldo();
             double nuevoSaldo = cliente.getSaldo();
-            controllerUsuario.actualizarSaldoCliente(cliente.getId(), nuevoSaldo);
+            controllerUsuario.actualizarSaldoCliente(cliente.getMail(), nuevoSaldo);
             actualizarSaldo();
         });
 

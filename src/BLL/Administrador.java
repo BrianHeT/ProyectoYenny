@@ -16,7 +16,7 @@ public class Administrador extends Usuario {
 	private String apellido;
 
 	  public Administrador(int id, String nombre, String password, int dni, String mail, String apellido) {
-	        super(id, nombre, password, dni, mail); // ✅ Se asegura de pasar `id` correctamente
+	        super(id, nombre, password, dni, mail); 
 	        this.apellido = apellido;
 
 	        System.out.println("✅ Administrador creado con ID en objeto (después de asignación): " + this.getId()); // 📌 Verificación

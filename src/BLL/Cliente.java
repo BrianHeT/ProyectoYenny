@@ -29,6 +29,9 @@ public class Cliente extends Usuario {
 
     public void setId(int id) {
         this.id = id;
+        if (controller != null && this.id > 0 && saldo >= 0) {
+        	controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+        }
     }
 
     public double getSaldo() {
@@ -37,8 +40,10 @@ public class Cliente extends Usuario {
 
     public void setSaldo(double saldo) {
         this.saldo = saldo;
+        if (controller != null && id > 0 && this.saldo >= 0) {
+        	controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+        }
     }
-
     public Cliente(int id, String nombre, String password, int dni, String mail, String direccion, double saldo) {
         super(id, nombre, password, dni, mail);
         this.direccion = direccion;
@@ -234,7 +239,8 @@ public class Cliente extends Usuario {
             return;
         }
         saldo -= total;
-        controller.actualizarSaldoCliente(this.id, this.saldo);
+        controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+
         for (ItemCarrito item : Carrito.getItems()) {
             Libro libro = item.getLibro();
             int nuevasVentas = libro.getVentas() + item.getCantidad();
@@ -288,9 +294,8 @@ public class Cliente extends Usuario {
                     } catch (Exception e) {
                         return;
                     }
-                    int idCliente = this.getId();
-                    controller.actualizarSaldoCliente(idCliente, this.saldo + monto);
                     this.saldo += monto;
+                    controller.actualizarSaldoCliente(this.getMail(), this.saldo); 
                     JOptionPane.showMessageDialog(null, "Saldo actualizado correctamente.");
                 } else {
                     JOptionPane.showMessageDialog(null, "Ingrese un monto válido.");
@@ -309,7 +314,8 @@ public class Cliente extends Usuario {
             } catch (Exception e) {
                 return false;
             }
-            controller.actualizarSaldoCliente(this.id, this.saldo);
+              controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+
             return true;
         }
         return false;

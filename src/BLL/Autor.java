@@ -11,12 +11,12 @@ public class Autor extends Usuario {
     private String editorial;
     private LinkedList<Libro> librosEnviados;
 
-    // ✅ Corrección: Agregar `id` en el constructor y pasarlo a `Usuario`
+
     public Autor(int id, String nombre, String password, int dni, String mail, boolean independiente, String editorial) {
-        super(id, nombre, password, dni, mail); // 📌 Ahora `id` se asigna correctamente
+        super(id, nombre, password, dni, mail); 
         this.independiente = independiente;
         this.editorial = editorial;
-        this.librosEnviados = new LinkedList<>(); // 📌 Se inicializa correctamente
+        this.librosEnviados = new LinkedList<>(); 
     }
 
 
@@ -101,27 +101,6 @@ public class Autor extends Usuario {
 		return librosEnviados;
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	 public void mostrarMenu2() {
 	        int opcion;
 	        do {
@@ -132,11 +111,11 @@ public class Autor extends Usuario {
 	            switch (opcion) {
 	                case 0:
 	                    JOptionPane.showMessageDialog(null, "Accediendo a gestión de libros...");
-	                    // Implementar lógica de gestión de libros
+	                    
 	                    break;
 	                case 1:
 	                    JOptionPane.showMessageDialog(null, "Mostrando estadísticas...");
-	                    // Implementar lógica de estadísticas
+	                    
 	                    break;
 	                case 2:
 	                    break;

@@ -95,7 +95,7 @@ public class RegisterFrame extends JFrame {
                 switch (tipoUsuario.toLowerCase()) {
                     case "administrador":
                         datoAdicional1 = JOptionPane.showInputDialog("Ingrese su apellido:");
-                        nuevoUsuario = new Administrador(0, nombre, email, dni, password, datoAdicional1);
+                        nuevoUsuario = new Administrador(0, nombre, password, dni, email, datoAdicional1);
                         break;
                     case "cliente":
                         datoAdicional1 = JOptionPane.showInputDialog("Ingrese su dirección:");

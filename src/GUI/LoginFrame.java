@@ -51,13 +51,13 @@ public class LoginFrame extends JFrame {
                     return;
                 }
 
-                Usuario usuarioLogueado = controller.login(email, password); // Pass credentials
+                Usuario usuarioLogueado = controller.login(email, password);
                 if (usuarioLogueado != null) {
                     JOptionPane.showMessageDialog(null, "Bienvenido, " + usuarioLogueado.getNombre() + "!");
                     if (usuarioLogueado instanceof Administrador) {
                         new MenuAdministradorFrame((Administrador) usuarioLogueado);
                     } else if (usuarioLogueado instanceof Cliente) {
-                        new MenuClienteFrame((Cliente) usuarioLogueado);
+                        new MenuClienteFrame((Cliente) usuarioLogueado, controller);
                     } else if (usuarioLogueado instanceof Autor) {
                         new MenuAutorFrame((Autor) usuarioLogueado);
                     }

@@ -25,7 +25,7 @@ public class MainFrame extends JFrame {
         });
 
         btnRegister.addActionListener(e -> {
-            new RegisterFrame(controller); // Implement RegisterFrame
+            new RegisterFrame(controller); 
             dispose();
         });
 

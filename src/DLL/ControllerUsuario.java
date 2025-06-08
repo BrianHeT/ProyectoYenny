@@ -10,86 +10,86 @@ import repository.UsuarioRepository;
 
 public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, Encriptador {
 
-    public Usuario login(String mail, String password) {
-        Usuario usuario = null;
-        String sql = """
-            SELECT
-                u.id_usuario,
-                u.nombre,
-                u.dni,
-                u.password,
-                u.tipo_usuario,
-                a.independiente,
-                a.editorial,
-                cl.id_cliente AS cliente_id,      
-                cl.saldo AS cliente_saldo,
-                adm.apellido AS admin_apellido,
-                cl.direccion AS cliente_direccion
-            FROM
-                usuario u
-            LEFT JOIN
-                autor a ON u.id_usuario = a.fk_usuario
-            LEFT JOIN
-                cliente cl ON u.id_usuario = cl.fk_usuario
-            LEFT JOIN
-                administrador adm ON u.id_usuario = adm.fk_usuario
-            WHERE
-                u.mail = ?
-        """;
+	public Usuario login(String mail, String password) {
+	    Usuario usuario = null;
+	    String sql = """
+	        SELECT
+	            u.id_usuario,
+	            u.nombre,
+	            u.dni,
+	            u.password,
+	            u.tipo_usuario,
+	            a.independiente,
+	            a.editorial,
+	            cl.id_cliente AS cliente_id,      
+	            cl.saldo AS cliente_saldo,
+	            adm.apellido AS admin_apellido,
+	            cl.direccion AS cliente_direccion
+	        FROM
+	            usuario u
+	        LEFT JOIN
+	            autor a ON u.id_usuario = a.fk_usuario
+	        LEFT JOIN
+	            cliente cl ON u.id_usuario = cl.fk_usuario
+	        LEFT JOIN
+	            administrador adm ON u.id_usuario = adm.fk_usuario
+	        WHERE
+	            u.mail = ?
+	    """;
 
-        try (Connection con = Conexion.getInstance().getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
+	    try (Connection con = Conexion.getInstance().getConnection();
+	         PreparedStatement stmt = con.prepareStatement(sql)) {
 
-            stmt.setString(1, mail);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int id = rs.getInt("id_usuario");
-                    String nombre = rs.getString("nombre");
-                    int dni = rs.getInt("dni");
-                    String passwordEncriptadaBD = rs.getString("password");
-                    String tipoUsuario = rs.getString("tipo_usuario"); 
+	        stmt.setString(1, mail);
+	        try (ResultSet rs = stmt.executeQuery()) {
+	            if (rs.next()) { 
+	                int id = rs.getInt("id_usuario");
+	                String nombre = rs.getString("nombre");
+	                int dni = rs.getInt("dni");
+	                String passwordEncriptadaBD = rs.getString("password");
+	                String tipoUsuario = rs.getString("tipo_usuario");
 
-                    if (!passwordEncriptadaBD.equals(encriptar(password))) {
-                        JOptionPane.showMessageDialog(null, "❌ Error: Contraseña incorrecta.");
-                        return null;
-                    }
+	                
+	                if (passwordEncriptadaBD.equals(encriptar(password))) { 
+	                    switch (tipoUsuario.toLowerCase()) {
+	                        case "administrador":
+	                            String apellido = rs.getString("admin_apellido");
+	                            usuario = new Administrador(id, nombre, passwordEncriptadaBD, dni, mail, apellido);
+	                            break;
+	                        case "cliente":
+	                            double saldo = rs.getDouble("cliente_saldo");
+	                            String direccion = rs.getString("cliente_direccion");
+	                            int idCliente = rs.getInt("cliente_id"); 
+	                            usuario = new Cliente(id, nombre, passwordEncriptadaBD, dni, mail, direccion);
+	                            ((Cliente)usuario).setSaldo(saldo);
+	                            ((Cliente)usuario).setController(this); 
+	                            ((Cliente)usuario).setIdCliente(idCliente); 
+	                            break;
+	                        case "autor":
+	                            boolean independiente = rs.getBoolean("independiente");
+	                            String editorial = rs.getString("editorial");
+	                            usuario = new Autor(id, nombre, passwordEncriptadaBD, dni, mail, independiente, editorial);
+	                            break;
+	                        default:
+	                            JOptionPane.showMessageDialog(null, "❌ Error: Tipo de usuario desconocido.");
+	                            return null; 
+	                    }
+	                    JOptionPane.showMessageDialog(null, "✅ Inicio de sesión exitoso. Bienvenido, " + nombre + "!");
+	                } else {
+	                    JOptionPane.showMessageDialog(null, "❌ Error: Contraseña incorrecta.");
+	                    
+	                }
+	            } else {
+	                JOptionPane.showMessageDialog(null, "❌ Error: Usuario no encontrado.");
+	            }
+	        }
+	    } catch (SQLException e) {
+	        JOptionPane.showMessageDialog(null, "❌ Error al iniciar sesión: " + e.getMessage());
+	        e.printStackTrace();
+	    }
 
-                    switch (tipoUsuario.toLowerCase()) {
-                        case "administrador":
-                            String apellido = rs.getString("admin_apellido");
-                            usuario = new Administrador(id, nombre, passwordEncriptadaBD, dni, mail, apellido);
-                            break;
-                        case "cliente":
-                            double saldo = rs.getDouble("cliente_saldo");
-                            String direccion = rs.getString("cliente_direccion");
-                            int idCliente = rs.getInt("cliente_id"); 
-                            usuario = new Cliente(id, nombre, passwordEncriptadaBD, dni, mail, direccion);
-                            ((Cliente)usuario).setSaldo(saldo);
-                            ((Cliente)usuario).setController(this);
-                            ((Cliente)usuario).setIdCliente(idCliente); 
-                            break;
-                        case "autor":
-                            boolean independiente = rs.getBoolean("independiente");
-                            String editorial = rs.getString("editorial");
-                            usuario = new Autor(id, nombre, passwordEncriptadaBD, dni, mail, independiente, editorial);
-                            break;
-                        default:
-                            JOptionPane.showMessageDialog(null, "❌ Error: Tipo de usuario desconocido.");
-                            return null;
-                    }
-
-                    JOptionPane.showMessageDialog(null, "✅ Inicio de sesión exitoso. Bienvenido, " + nombre + "!");
-                } else {
-                    JOptionPane.showMessageDialog(null, "❌ Error: Usuario no encontrado.");
-                }
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "❌ Error al iniciar sesión: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return usuario;
-    }
+	    return usuario;
+	}
 
     public static int obtenerNuevoIdUsuario() {
         String query = "SELECT MAX(id_usuario) FROM usuario"; 
@@ -112,11 +112,11 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
         int idUsuario = -1;
         try (Connection con = Conexion.getInstance().getConnection();
              PreparedStatement stmtUsuario = con.prepareStatement(insertUsuarioSQL, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            stmtUsuario.setString(1, usuario.getNombre());
-            stmtUsuario.setString(2, usuario.getMail());
-            stmtUsuario.setInt(3, usuario.getDni());
-            stmtUsuario.setString(4, usuario.getPassword());
-            stmtUsuario.setString(5, tipoUsuario);
+        	stmtUsuario.setString(1, usuario.getNombre());
+        	stmtUsuario.setString(2, usuario.getMail());
+        	stmtUsuario.setInt(3, usuario.getDni());
+        	stmtUsuario.setString(4, encriptar(usuario.getPassword())); 
+        	stmtUsuario.setString(5, tipoUsuario);
 
             int filasUsuario = stmtUsuario.executeUpdate();
             if (filasUsuario > 0) {
@@ -228,13 +228,13 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
         LinkedList<Usuario> usuarios = new LinkedList<>();
 
         String query = """
-            SELECT u.id_usuario, u.nombre, u.dni, u.mail, u.password, u.tipo_usuario,
-           a.apellido, c.direccion, cl.saldo, au.independiente, au.editorial
-    FROM usuario u
-    LEFT JOIN administrador a ON u.id_usuario = a.fk_usuario
-    LEFT JOIN cliente c ON u.id_usuario = c.fk_usuario
-    LEFT JOIN autor au ON u.id_usuario = au.fk_usuario;
-        """;
+                SELECT u.id_usuario, u.nombre, u.dni, u.mail, u.password, u.tipo_usuario,
+                       a.apellido, cl.direccion, cl.saldo, au.independiente, au.editorial
+                FROM usuario u
+                LEFT JOIN administrador a ON u.id_usuario = a.fk_usuario
+                LEFT JOIN cliente cl ON u.id_usuario = cl.fk_usuario
+                LEFT JOIN autor au ON u.id_usuario = au.fk_usuario;
+            """;
 
         try (Connection con = Conexion.getInstance().getConnection();
              PreparedStatement stmt = con.prepareStatement(query);
@@ -287,8 +287,8 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
         		PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setString(1, nuevoNombre);
             stmt.setString(2, nuevoMail);
-            stmt.setString(3, nuevaPassword);
-            stmt.setInt(4, idUsuario); // ✅ Asegura que este parámetro se configure correctamente
+            stmt.setString(3, encriptar(nuevaPassword));
+            stmt.setInt(4, idUsuario); 
             System.out.println("✅ ID Usuario recibido: " + idUsuario);
             System.out.println("✅ ID Usuario recibido para modificar: " + idUsuario);
             if (idUsuario == 0) {
@@ -453,14 +453,8 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
         }
         return transacciones;
     }
-    public void actualizarSaldoCliente(int idUsuario, double nuevoSaldo) {
-        if (idUsuario <= 0) {
-            JOptionPane.showMessageDialog(null, "❌ Error: El usuario no tiene un ID válido.");
-            return;
-        }
-        System.out.println("🔍 actualizarSaldoCliente: idUsuario recibido = " + idUsuario);
-        int idCliente = obtenerIdClientePorUsuario(idUsuario);
-        System.out.println("🔍 obtenerIdClientePorUsuario devolvió idCliente = " + idCliente);
+    public void actualizarSaldoCliente(String email, double nuevoSaldo) {
+        int idCliente = obtenerIdClientePorEmail(email);
         if (idCliente == -1) {
             JOptionPane.showMessageDialog(null, "❌ Error: No se encontró el cliente para el usuario.");
             return;
@@ -481,23 +475,25 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
         }
     }
 
-    public int obtenerIdClientePorUsuario(int fkUsuario) {
-        String sql = "SELECT id_cliente FROM cliente WHERE fk_usuario = ?";
+    public int obtenerIdClientePorEmail(String email) {
+        String sql = "SELECT c.id_cliente FROM cliente c " +
+                     "JOIN usuario u ON c.fk_usuario = u.id_usuario " +
+                     "WHERE u.mail = ?";
         try (Connection con = Conexion.getInstance().getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
-            stmt.setInt(1, fkUsuario);
+            stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 int idCliente = rs.getInt("id_cliente");
-                System.out.println("✅ Encontrado id_cliente = " + idCliente + " para fk_usuario = " + fkUsuario);
+                System.out.println("✅ Found id_cliente = " + idCliente + " for email = " + email);
                 return idCliente;
             } else {
-                System.out.println("❌ No se encontró cliente para fk_usuario = " + fkUsuario);
+                System.out.println("❌ No client found for email = " + email);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1; 
+        return -1;
     }
 
 
