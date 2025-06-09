@@ -1,6 +1,9 @@
 package BLL;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -233,6 +236,7 @@ public class Cliente extends Usuario {
             JOptionPane.showMessageDialog(null, "No tenés saldo suficiente.\nSaldo disponible: $" + saldo + "\nTotal de la compra: $" + total, "Saldo insuficiente", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        
         try {
             checkController();
         } catch (Exception e) {
@@ -246,9 +250,16 @@ public class Cliente extends Usuario {
             int nuevasVentas = libro.getVentas() + item.getCantidad();
             libro.setVentas(nuevasVentas);
         }
+        List<ItemCarrito> itemsComprados = new ArrayList<>(Carrito.getItems());
         Carrito.vaciar();
         JOptionPane.showMessageDialog(null, "Compra realizada con éxito.\nSe descontaron $" + total + " de tu saldo.\nSaldo restante: $" + saldo, "Compra exitosa", JOptionPane.INFORMATION_MESSAGE);
+        Transaccion nuevaTransaccion = new Transaccion(this, total, itemsComprados);
+        controller.registrarTransaccion(nuevaTransaccion);
+
+
+
     }
+    
 
     public void verLibrosDelCarrito() {
         if (Carrito.getItems().isEmpty()) {
