@@ -12,7 +12,6 @@ import DLL.ControllerUsuario;
 import repository.TipoOpcionCliente;
 
 public class Cliente extends Usuario {
-    private int id;
     private String direccion;
     private double saldo; 
     private Carrito Carrito;
@@ -26,16 +25,7 @@ public class Cliente extends Usuario {
         this.controller = controller;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-        if (controller != null && this.id > 0 && saldo >= 0) {
-        	controller.actualizarSaldoCliente(this.getMail(), this.saldo);
-        }
-    }
+   
 
     public double getSaldo() {
         return saldo;
@@ -43,21 +33,34 @@ public class Cliente extends Usuario {
 
     public void setSaldo(double saldo) {
         this.saldo = saldo;
-        if (controller != null && id > 0 && this.saldo >= 0) {
-        	controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+        if (controller != null && getId() > 0) {
+            controller.actualizarSaldoCliente(getMail(), this.saldo);
         }
     }
-    public Cliente(int id, String nombre, String password, int dni, String mail, String direccion, double saldo) {
+
+    public Cliente(int id,
+                   String nombre,
+                   String password,
+                   int dni,
+                   String mail,
+                   String direccion) {
         super(id, nombre, password, dni, mail);
         this.direccion = direccion;
-        this.saldo = saldo; 
-        this.Carrito = new Carrito();
+        this.saldo     = 0.0;
+        this.Carrito   = new Carrito();
     }
-    public Cliente(int id, String nombre, String password, int dni, String mail, String direccion) {
+
+    public Cliente(int id,
+                   String nombre,
+                   String password,
+                   int dni,
+                   String mail,
+                   String direccion,
+                   double saldo) {
         super(id, nombre, password, dni, mail);
         this.direccion = direccion;
-        this.saldo = 0.0; 
-        this.Carrito = new Carrito();
+        this.saldo     = saldo;
+        this.Carrito   = new Carrito();
     }
 
     public String getDireccion() {
@@ -87,14 +90,7 @@ public class Cliente extends Usuario {
             throw new IllegalStateException("ControllerUsuario no asignado en Cliente");
         }
     }
-    public int getIdCliente(int idCliente) {
-        this.id = idCliente;
-    
-    	return this.id;}
-    
-    public void setIdCliente(int idCliente) {
-        this.id = idCliente;
-    }
+  
 
     @Override
     public void mostrarMenu() {       
@@ -277,22 +273,35 @@ public class Cliente extends Usuario {
     }
 
     public void verMisCompras() {
-        try {
-            checkController();
-        } catch (Exception e) {
+        try { checkController(); }
+        catch (Exception e) { return; }
+
+        LinkedList<Transaccion> txs = controller.obtenerTransaccionesPorCliente(getId());
+        if (txs.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Aún no has realizado compras.",
+                "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        LinkedList<Transaccion> transacciones = controller.obtenerTransaccionesPorCliente(this.getId());
-        if (transacciones.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Aún no has realizado compras.", "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
-            return;
+
+        StringBuilder sb = new StringBuilder("Historial de Compras:\n\n");
+        for (Transaccion tx : txs) {
+            sb.append("Transacción #").append(tx.getId())
+              .append(" — Total: $").append(tx.getTotal()).append("\n")
+              .append("Detalle de ítems:\n");
+            for (ItemCarrito it : tx.getItems()) {
+                double sub = it.getCantidad() * it.getLibro().getPrecio();
+                sb.append("  • ").append(it.getLibro().getTitulo())
+                  .append("  x").append(it.getCantidad())
+                  .append("  @ $").append(it.getLibro().getPrecio())
+                  .append("  = $").append(sub).append("\n");
+            }
+            sb.append("\n");
         }
-        StringBuilder historialCompras = new StringBuilder("Historial de Compras:\n");
-        for (Transaccion transaccion : transacciones) {
-            historialCompras.append("- Compra por $").append(transaccion.getTotal()).append("\n");
-        }
-        JOptionPane.showMessageDialog(null, historialCompras.toString(), "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
+
+        JOptionPane.showMessageDialog(null, sb.toString(),
+            "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
     }
+
 
     public void agregarSaldo() {
         String input = JOptionPane.showInputDialog(null, "Ingrese el monto a agregar:");

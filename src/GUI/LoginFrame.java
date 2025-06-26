@@ -1,16 +1,18 @@
 package GUI;
 
+import BLL.Usuario;
 import BLL.Administrador;
 import BLL.Cliente;
 import BLL.Autor;
+import DLL.ControllerUsuario;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import DLL.ControllerUsuario;
-import BLL.Usuario;
 
+/**
+ * Ventana de login que recibe un ControllerUsuario existente
+ * en lugar de crear uno nuevo.
+ */
 public class LoginFrame extends JFrame {
 	private JTextField txtEmail;
 	private JPasswordField txtPassword;

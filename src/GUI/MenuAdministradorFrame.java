@@ -1,18 +1,25 @@
 package GUI;
 
+import javax.swing.*;
+
 import BLL.Administrador;
 import BLL.GestionPagos;
-import DLL.ControllerUsuario;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import DLL.ControllerUsuario;  // ajusta tu paquete real
 
 public class MenuAdministradorFrame extends JFrame {
     private Administrador admin;
+    private ControllerUsuario controller;
 
-    public MenuAdministradorFrame(Administrador admin) {
-        this.admin = admin;
+    // Ahora recibimos ambos: controller y admin
+    public MenuAdministradorFrame(ControllerUsuario controller, Administrador admin) {
+        this.controller = controller;
+        this.admin      = admin;
+        // Inyectamos el controller en el objeto admin
+        this.admin.setController(controller);
+
         setTitle("Menú Administrador");
         setSize(400, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -21,31 +28,44 @@ public class MenuAdministradorFrame extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
 
         JButton btnVerUsuarios = new JButton("Ver Usuarios");
-        btnVerUsuarios.addActionListener((ActionEvent e) -> admin.mostrarUsuarios());
+        btnVerUsuarios.addActionListener((ActionEvent e) ->
+            admin.mostrarUsuarios()
+        );
 
         JButton btnModificarUsuario = new JButton("Modificar Usuario");
-        btnModificarUsuario.addActionListener((ActionEvent e) -> admin.modificarUsuario());
+        btnModificarUsuario.addActionListener((ActionEvent e) ->
+            admin.mostrarUsuariosYModificar()
+        );
 
         JButton btnEliminarUsuario = new JButton("Eliminar Usuario");
-        btnEliminarUsuario.addActionListener((ActionEvent e) -> admin.eliminarUsuario());
+        btnEliminarUsuario.addActionListener((ActionEvent e) ->
+            admin.eliminarUsuario()
+        );
 
         JButton btnVerLibros = new JButton("Ver libros");
-        btnVerLibros.addActionListener((ActionEvent e) -> admin.verLibrosDisponibles());
+        btnVerLibros.addActionListener((ActionEvent e) ->
+            admin.verLibrosDisponibles()
+        );
 
         JButton btnAgregarLibro = new JButton("Agregar Libro");
-        btnAgregarLibro.addActionListener((ActionEvent e) -> admin.crearLibro());
+        btnAgregarLibro.addActionListener((ActionEvent e) ->
+            admin.crearLibro()
+        );
 
         JButton btnModificarLibro = new JButton("Modificar Libro");
-        btnModificarLibro.addActionListener((ActionEvent e) -> admin.modificarLibro());
+        btnModificarLibro.addActionListener((ActionEvent e) ->
+            admin.modificarLibro()
+        );
 
         JButton btnEliminarLibro = new JButton("Eliminar Libro");
-        btnEliminarLibro.addActionListener((ActionEvent e) -> admin.eliminarLibro());
+        btnEliminarLibro.addActionListener((ActionEvent e) ->
+            admin.eliminarLibro()
+        );
 
         JButton btnVerCompras = new JButton("Ver Compras");
-        btnVerCompras.addActionListener((ActionEvent e) -> {
-            JOptionPane.showMessageDialog(this, "Ver compras... [Prototipo]");
-            GestionPagos.getInstance().mostrarTransacciones();
-        });
+        btnVerCompras.addActionListener(e ->
+            admin.verComprasConDetalle()
+        );
 
         JButton btnSalir = new JButton("Salir");
         btnSalir.addActionListener((ActionEvent e) -> dispose());
