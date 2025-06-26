@@ -1,6 +1,8 @@
 package BLL;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,8 +16,9 @@ import repository.TipoOpcionCliente;
 public class Cliente extends Usuario {
     private String direccion;
     private double saldo; 
-    private Carrito Carrito;
+    private final Carrito carrito;
     private ControllerUsuario controller;
+    private int idCliente;
 
     public ControllerUsuario getController() {
         return controller;
@@ -25,7 +28,13 @@ public class Cliente extends Usuario {
         this.controller = controller;
     }
 
-   
+
+    public void setIdCliente(int idCliente) {
+        this.idCliente = idCliente;
+    }
+    public int getIdCliente() {
+        return idCliente;
+    }
 
     public double getSaldo() {
         return saldo;
@@ -47,7 +56,7 @@ public class Cliente extends Usuario {
         super(id, nombre, password, dni, mail);
         this.direccion = direccion;
         this.saldo     = 0.0;
-        this.Carrito   = new Carrito();
+        this.carrito   = new Carrito(id);
     }
 
     public Cliente(int id,
@@ -60,7 +69,7 @@ public class Cliente extends Usuario {
         super(id, nombre, password, dni, mail);
         this.direccion = direccion;
         this.saldo     = saldo;
-        this.Carrito   = new Carrito();
+        this.carrito   = new Carrito();
     }
 
     public String getDireccion() {
@@ -71,15 +80,12 @@ public class Cliente extends Usuario {
         this.direccion = direccion;
     }
 
+   
     public Carrito getCarrito() {
-        return Carrito;
-    }
+		return carrito;
+	}
 
-    public void setCarrito(Carrito carrito) {
-        Carrito = carrito;
-    }
-
-    @Override
+	@Override
     public String getTipoUsuario() {
         return "Cliente";
     }
@@ -180,127 +186,162 @@ public class Cliente extends Usuario {
     }
 
     public LinkedList<Libro> verLibrosDisponibles() {
+        LinkedList<Libro> todos;
         try {
-            checkController();
+            todos = controller.obtenerLibros();       // tu SELECT * FROM libro
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                "❌ Error al obtener libros: " + e.getMessage());
             return new LinkedList<>();
         }
-        LinkedList<Libro> libros = controller.obtenerLibros();
-        if (libros.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "📭 No hay libros registrados en la base de datos.");
+
+        // Filtramos sólo aprobados
+        LinkedList<Libro> aprobados = new LinkedList<>();
+        for (Libro l : todos) {
+            if ("APROBADO".equalsIgnoreCase(l.getEstado())) {
+                aprobados.add(l);
+            }
         }
-        String[] columnNames = { "Título", "Sipnosis", "Precio", "Stock", "Estado" };
-        Object[][] data = new Object[libros.size()][5];
-        for (int i = 0; i < libros.size(); i++) {
-            Libro libro = libros.get(i);
-            data[i][0] = libro.getTitulo();
-            data[i][1] = libro.getsipnosis();
-            data[i][2] = libro.getPrecio();
-            data[i][3] = libro.getStock();
-            data[i][4] = libro.getEstado();
+        if (aprobados.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                "📭 No hay libros aprobados para la venta.");
+        } else {
+            // mostramos la tabla con aprobados
+            String[] cols = { "Título", "Sinopsis", "Precio", "Stock" };
+            Object[][] data = new Object[aprobados.size()][4];
+            for (int i = 0; i < aprobados.size(); i++) {
+                Libro lib = aprobados.get(i);
+                data[i][0] = lib.getTitulo();
+                data[i][1] = lib.getSipnosis();
+                data[i][2] = lib.getPrecio();
+                data[i][3] = lib.getStock();
+            }
+            JTable table = new JTable(data, cols);
+            JOptionPane.showMessageDialog(
+                null, new JScrollPane(table),
+                "Catálogo de Libros", JOptionPane.INFORMATION_MESSAGE
+            );
         }
-        JTable table = new JTable(data, columnNames);
-        JScrollPane scrollPane = new JScrollPane(table);
-        JOptionPane.showMessageDialog(null, scrollPane, "Libros Disponibles", JOptionPane.INFORMATION_MESSAGE);
-        return libros;
+        return aprobados;
     }
 
     public void agregarLibroAlCarrito(int idLibro, int cantidad) {
         try {
-            checkController();
-        } catch (Exception e) {
-            return;
-        }
-        LinkedList<Libro> libros = controller.obtenerLibros();
-        for (Libro libro : libros) {
-            if (libro.getId() == idLibro) {
-                Carrito.agregarItem(libro, cantidad);
-                JOptionPane.showMessageDialog(null, "Libro agregado al carrito: " + libro.getTitulo());
-                return;
+            List<Libro> disponibles = controller.obtenerLibrosDisponibles(); // solo aprobados
+            for (Libro lib : disponibles) {
+                if (lib.getId() == idLibro) {
+                    carrito.agregarItem(lib, cantidad);
+                    JOptionPane.showMessageDialog(null,
+                        "✅ \"" + lib.getTitulo() + "\" x" + cantidad + " agregado al carrito.");
+                    return;
+                }
             }
+            JOptionPane.showMessageDialog(null,
+                "❌ Libro no encontrado o no disponible.",
+                "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                "❌ Error: " + e.getMessage());
         }
-        JOptionPane.showMessageDialog(null, "Libro no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
     }
+
+
 
     public void realizarCompra() {
-        if (Carrito.getItems().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "El carrito está vacío. No puedes realizar una compra.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (carrito.getItems().isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                "❌ Tu carrito está vacío.", "Error",
+                JOptionPane.ERROR_MESSAGE);
             return;
         }
-        double total = Carrito.calcularTotal();
+        double total = carrito.calcularTotal();
         if (saldo < total) {
-            JOptionPane.showMessageDialog(null, "No tenés saldo suficiente.\nSaldo disponible: $" + saldo + "\nTotal de la compra: $" + total, "Saldo insuficiente", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                "❌ Saldo insuficiente.\nSaldo: $"+saldo
+              +"\nTotal compra: $"+total,
+                "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        try {
-            checkController();
-        } catch (Exception e) {
-            return;
-        }
+
+        // bajamos el saldo y registramos transacción
         saldo -= total;
-        controller.actualizarSaldoCliente(this.getMail(), this.saldo);
+        controller.actualizarSaldoCliente(getMail(), saldo);
 
-        for (ItemCarrito item : Carrito.getItems()) {
-            Libro libro = item.getLibro();
-            int nuevasVentas = libro.getVentas() + item.getCantidad();
-            libro.setVentas(nuevasVentas);
-        }
-        List<ItemCarrito> itemsComprados = new ArrayList<>(Carrito.getItems());
-        Carrito.vaciar();
-        JOptionPane.showMessageDialog(null, "Compra realizada con éxito.\nSe descontaron $" + total + " de tu saldo.\nSaldo restante: $" + saldo, "Compra exitosa", JOptionPane.INFORMATION_MESSAGE);
-        Transaccion nuevaTransaccion = new Transaccion(this, total, itemsComprados);
-        controller.registrarTransaccion(nuevaTransaccion);
+        // construyo objeto Transaccion para registrar
+        Transaccion tx = new Transaccion(this, total, 
+                          new ArrayList<>(carrito.getItems()));
+        controller.registrarTransaccion(tx);
 
-
-
+        carrito.vaciar();
+        JOptionPane.showMessageDialog(null,
+            "✅ Compra exitosa.\nNuevo saldo: $" + saldo,
+            "Compra", JOptionPane.INFORMATION_MESSAGE);
     }
-    
 
     public void verLibrosDelCarrito() {
-        if (Carrito.getItems().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "El carrito está vacío.", "Carrito de Compras", JOptionPane.INFORMATION_MESSAGE);
+        List<ItemCarrito> items = carrito.getItems();
+        if (items.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                "Tu carrito está vacío.", "Carrito",
+                JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        StringBuilder contenidoCarrito = new StringBuilder("Libros en tu carrito:\n");
-        for (ItemCarrito item : Carrito.getItems()) {
-            contenidoCarrito.append("- ").append(item.getLibro().getTitulo())
-                .append(" x ").append(item.getCantidad())
-                .append(" ($").append(item.getLibro().getPrecio()).append(" c/u)\n");
+
+        StringBuilder contenido = new StringBuilder("📚 Libros en tu carrito:\n\n");
+        for (ItemCarrito item : items) {
+            Libro libro = item.getLibro();
+            int qty = item.getCantidad();
+            double precio = libro.getPrecio();
+            double subtotal = qty * precio;
+
+            contenido.append("• ")
+                     .append(libro.getTitulo())
+                     .append(" — x").append(qty)
+                     .append(" @ $").append(precio)
+                     .append(" = $").append(subtotal)
+                     .append("\n");
         }
-        contenidoCarrito.append("\nTotal: $").append(Carrito.calcularTotal());
-        JOptionPane.showMessageDialog(null, contenidoCarrito.toString(), "Carrito de Compras", JOptionPane.INFORMATION_MESSAGE);
+        contenido.append("\nTotal: $").append(carrito.calcularTotal());
+
+        JOptionPane.showMessageDialog(null,
+            contenido.toString(), "🛒 Carrito", JOptionPane.INFORMATION_MESSAGE);
     }
+
 
     public void verMisCompras() {
-        try { checkController(); }
-        catch (Exception e) { return; }
-
-        LinkedList<Transaccion> txs = controller.obtenerTransaccionesPorCliente(getId());
-        if (txs.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Aún no has realizado compras.",
-                "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder("Historial de Compras:\n\n");
-        for (Transaccion tx : txs) {
-            sb.append("Transacción #").append(tx.getId())
-              .append(" — Total: $").append(tx.getTotal()).append("\n")
-              .append("Detalle de ítems:\n");
-            for (ItemCarrito it : tx.getItems()) {
-                double sub = it.getCantidad() * it.getLibro().getPrecio();
-                sb.append("  • ").append(it.getLibro().getTitulo())
-                  .append("  x").append(it.getCantidad())
-                  .append("  @ $").append(it.getLibro().getPrecio())
-                  .append("  = $").append(sub).append("\n");
+        try {
+            List<Transaccion> txs = controller.obtenerTransaccionesPorCliente(getId());
+            if (txs.isEmpty()) {
+                JOptionPane.showMessageDialog(null,
+                    "Aún no has realizado compras.",
+                    "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
+                return;
             }
-            sb.append("\n");
-        }
 
-        JOptionPane.showMessageDialog(null, sb.toString(),
-            "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
+            StringBuilder sb = new StringBuilder("🧾 Historial de Compras:\n\n");
+            for (Transaccion tx : txs) {
+                sb.append("🛍️ Transacción #").append(tx.getId())
+                  .append(" — Total: $").append(tx.getTotal()).append("\n");
+
+                for (ItemCarrito it : tx.getItems()) {
+                    Libro libro = it.getLibro();
+                    sb.append("   • ").append(libro.getTitulo())
+                      .append(" x").append(it.getCantidad())
+                      .append(" @ $").append(libro.getPrecio())
+                      .append(" = $").append(it.getCantidad() * libro.getPrecio())
+                      .append("\n");
+                }
+                sb.append("\n");
+            }
+
+            JOptionPane.showMessageDialog(null,
+                sb.toString(), "Mis Compras", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                "❌ Error al cargar historial: " + e.getMessage());
+        }
     }
+
 
 
     public void agregarSaldo() {
@@ -367,6 +408,22 @@ public class Cliente extends Usuario {
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(null, "Ingrese una cantidad válida.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    public List<Libro> listarLibrosParaVenta() {
+        try {
+            return controller.obtenerLibrosDisponibles();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+  
+ // En Cliente.java
+    public void agregarLibroAlCarrito(Libro libro, int cantidad) {
+        carrito.agregarItem(libro, cantidad);
+        JOptionPane.showMessageDialog(null,
+            "✅ \"" + libro.getTitulo() + "\" x" + cantidad + " agregado al carrito.");
     }
 
 	

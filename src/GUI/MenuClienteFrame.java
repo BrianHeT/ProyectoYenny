@@ -1,115 +1,133 @@
 package GUI;
 
-import DLL.ControllerUsuario;
 import BLL.Cliente;
+import BLL.Libro;
+import DLL.ControllerUsuario;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.util.List;
 
 public class MenuClienteFrame extends JFrame {
-    private ControllerUsuario controller;
-    private Cliente cliente;
-    private JLabel lblSaldo;
-    private JLabel lblClienteInfo;
+	private final ControllerUsuario controller;
+	private final Cliente cliente;
+	private final JLabel lblSaldo;
+	private final JLabel lblClienteInfo;
 
-    public MenuClienteFrame(ControllerUsuario controller, Cliente cliente) {
-        this.controller = controller;
-        this.cliente    = cliente;
-        // Inyectamos el controller en la instancia Cliente
-        this.cliente.setController(controller);
+	private final DefaultTableModel modelLibros = new DefaultTableModel(
+			new String[] { "ID", "Título", "sipnosis", "Precio", "Stock" }, 0) {
+		@Override
+		public boolean isCellEditable(int row, int col) {
+			return false;
+		}
+	};
+	private final JTable tablaLibros = new JTable(modelLibros);
 
-        setTitle("Menú Cliente");
-        setSize(400, 500);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+	public MenuClienteFrame(ControllerUsuario controller, Cliente cliente) {
+		this.controller = controller;
+		this.cliente = cliente;
+		this.cliente.setController(controller);
 
-        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+		setTitle("Menú Cliente");
+		setSize(850, 500);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setLayout(new BorderLayout(10, 10));
 
-        lblClienteInfo = new JLabel(
-            "Cliente: " + cliente.getNombre() 
-          + " ("      + cliente.getMail() + ")"
-        );
-        lblClienteInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		// Panel lateral con botones
+		JPanel panelBotones = new JPanel(new GridLayout(0, 1, 10, 10));
+		lblClienteInfo = new JLabel("Cliente: " + cliente.getNombre() + " (" + cliente.getMail() + ")");
+		lblClienteInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		lblSaldo = new JLabel("Saldo actual: $" + cliente.getSaldo());
+		lblSaldo.setHorizontalAlignment(SwingConstants.CENTER);
 
-        lblSaldo = new JLabel("Saldo actual: $" + cliente.getSaldo());
-        lblSaldo.setHorizontalAlignment(SwingConstants.CENTER);
+		JButton btnIngresarSaldo = new JButton("Ingresar Saldo");
+		btnIngresarSaldo.addActionListener(e -> {
+			cliente.agregarSaldo();
+			controller.actualizarSaldoCliente(cliente.getMail(), cliente.getSaldo());
+			actualizarSaldo();
+		});
 
-        JButton btnIngresarSaldo = new JButton("Ingresar Saldo");
-        btnIngresarSaldo.addActionListener((ActionEvent e) -> {
-            cliente.agregarSaldo();
-            controller.actualizarSaldoCliente(
-                cliente.getMail(), 
-                cliente.getSaldo()
-            );
-            actualizarSaldo();
-        });
+		JButton btnVerCatalogo = new JButton("Ver Catálogo");
+		btnVerCatalogo.addActionListener(e -> refrescarTablaLibros());
 
-        JButton btnVerCatalogo = new JButton("Ver Catálogo");
-        btnVerCatalogo.addActionListener((ActionEvent e) ->
-            cliente.mostrarCatalogoYAgregarAlCarrito()
-        );
+		JButton btnAgregar = new JButton("Agregar al Carrito");
+		btnAgregar.addActionListener(e -> {
+			int fila = tablaLibros.getSelectedRow();
+			if (fila < 0) {
+				JOptionPane.showMessageDialog(this, "Seleccione un libro para agregar.");
+				return;
+			}
+			int idLibro = (int) modelLibros.getValueAt(fila, 0);
+			int stock = (int) modelLibros.getValueAt(fila, 4);
 
-        JButton btnVerCarrito = new JButton("Ver Carrito");
-        btnVerCarrito.addActionListener((ActionEvent e) ->
-            cliente.verLibrosDelCarrito()
-        );
+			String input = JOptionPane.showInputDialog(this,
+					"¿Cuántas unidades desea agregar? (Stock disponible: " + stock + ")", "Agregar al Carrito",
+					JOptionPane.QUESTION_MESSAGE);
 
-        JButton btnRealizarCompra = new JButton("Realizar Compra");
-        btnRealizarCompra.addActionListener((ActionEvent e) -> {
-            cliente.realizarCompra();
-            actualizarSaldo();
-        });
+			if (input == null)
+				return; // cancelado
+			int cantidad;
+			try {
+				cantidad = Integer.parseInt(input);
+				if (cantidad <= 0 || cantidad > stock) {
+					JOptionPane.showMessageDialog(this, "Cantidad inválida o mayor al stock disponible.", "Error",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(this, "Ingrese un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 
-        JButton btnMisCompras = new JButton("Mis Compras");
-        btnMisCompras.addActionListener((ActionEvent e) ->
-            cliente.verMisCompras()
-        );
+			cliente.agregarLibroAlCarrito(idLibro, cantidad);
+		});
 
-        JButton btnPromociones = new JButton("Promociones");
-        btnPromociones.addActionListener((ActionEvent e) ->
-            JOptionPane.showMessageDialog(
-                this, 
-                "No hay promociones disponibles actualmente."
-            )
-        );
+		JButton btnVerCarrito = new JButton("Ver Carrito");
+		btnVerCarrito.addActionListener(e -> cliente.verLibrosDelCarrito());
 
-        JButton btnEstadoEnvio = new JButton("Estado de Envío");
-        btnEstadoEnvio.addActionListener((ActionEvent e) ->
-            JOptionPane.showMessageDialog(
-                this, 
-                "Ver Estado de Envío... [Prototipo]"
-            )
-        );
+		JButton btnRealizarCompra = new JButton("Realizar Compra");
+		btnRealizarCompra.addActionListener(e -> {
+			cliente.realizarCompra();
+			actualizarSaldo();
+			refrescarTablaLibros();
+		});
 
-        JButton btnCambiosDevoluciones = new JButton("Cambios y Devoluciones");
-        btnCambiosDevoluciones.addActionListener((ActionEvent e) ->
-            JOptionPane.showMessageDialog(
-                this, 
-                "Cambios y Devoluciones... [Prototipo]"
-            )
-        );
+		JButton btnMisCompras = new JButton("Mis Compras");
+		btnMisCompras.addActionListener(e -> cliente.verMisCompras());
 
-        JButton btnSalir = new JButton("Salir");
-        btnSalir.addActionListener(e -> dispose());
+		JButton btnSalir = new JButton("Salir");
+		btnSalir.addActionListener(e -> dispose());
 
-        panel.add(lblClienteInfo);
-        panel.add(lblSaldo);
-        panel.add(btnIngresarSaldo);
-        panel.add(btnVerCatalogo);
-        panel.add(btnVerCarrito);
-        panel.add(btnRealizarCompra);
-        panel.add(btnMisCompras);
-        panel.add(btnPromociones);
-        panel.add(btnEstadoEnvio);
-        panel.add(btnCambiosDevoluciones);
-        panel.add(btnSalir);
+		// Agrega todos los botones al panel lateral
+		panelBotones.add(lblClienteInfo);
+		panelBotones.add(lblSaldo);
+		panelBotones.add(btnIngresarSaldo);
+		panelBotones.add(btnVerCatalogo);
+		panelBotones.add(btnAgregar);
+		panelBotones.add(btnVerCarrito);
+		panelBotones.add(btnRealizarCompra);
+		panelBotones.add(btnMisCompras);
+		panelBotones.add(btnSalir);
 
-        add(panel);
-        setVisible(true);
-    }
+		// Agrega componentes al frame
+		add(panelBotones, BorderLayout.WEST);
+		add(new JScrollPane(tablaLibros), BorderLayout.CENTER);
 
-    private void actualizarSaldo() {
-        lblSaldo.setText("Saldo actual: $" + cliente.getSaldo());
-    }
+		refrescarTablaLibros();
+		setVisible(true);
+	}
+
+	private void actualizarSaldo() {
+		lblSaldo.setText("Saldo actual: $" + cliente.getSaldo());
+	}
+
+	private void refrescarTablaLibros() {
+		modelLibros.setRowCount(0);
+		List<Libro> lista = cliente.listarLibrosParaVenta();
+		for (Libro l : lista) {
+			modelLibros.addRow(new Object[] { l.getId(), l.getTitulo(), l.getsipnosis(), l.getPrecio(), l.getStock() });
+		}
+	}
 }

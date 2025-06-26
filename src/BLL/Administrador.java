@@ -1,6 +1,8 @@
 package BLL;
 
 import java.awt.Frame;
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,15 +25,27 @@ public class Administrador extends Usuario {
 	public Administrador(int id, String nombre, String password, int dni, String mail, String apellido) {
 		super(id, nombre, password, dni, mail);
 		this.apellido = apellido;
-	 }
-	    private ControllerUsuario controller;
-	    public void setController(ControllerUsuario controller) {
-	        this.controller = controller;
-	    }
+	}
 
-	    public ControllerUsuario getController() {
-	        return controller;
-	    }
+	private Administrador admin;
+
+	public Administrador getAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(Administrador admin) {
+		this.admin = admin;
+	}
+
+	private ControllerUsuario controller;
+
+	public void setController(ControllerUsuario controller) {
+		this.controller = controller;
+	}
+
+	public ControllerUsuario getController() {
+		return controller;
+	}
 
 	public String getApellido() {
 		return apellido;
@@ -139,70 +153,57 @@ public class Administrador extends Usuario {
 	}
 
 	public void verComprasConDetalle() {
-	    List<Compra> compras = controller.obtenerComprasConDetalle();
-	    if (compras.isEmpty()) {
-	        JOptionPane.showMessageDialog(null, "No hay compras registradas.");
-	        return;
-	    }
+		List<Compra> compras = controller.obtenerComprasConDetalle();
+		if (compras.isEmpty()) {
+			JOptionPane.showMessageDialog(null, "No hay compras registradas.");
+			return;
+		}
 
-	    // 1) Modelo y tabla de RESUMEN
-	    String[] colsRes = { "ID Compra", "Cliente", "Total" };
-	    DefaultTableModel mdlRes = new DefaultTableModel(colsRes, 0);
-	    for (Compra c : compras) {
-	        mdlRes.addRow(new Object[]{
-	            c.getIdCompra(),
-	            c.getNombreCliente(),
-	            c.getTotalCabecera()
-	        });
-	    }
-	    JTable tblRes = new JTable(mdlRes);
-	    tblRes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// 1) Modelo y tabla de RESUMEN
+		String[] colsRes = { "ID Compra", "Cliente", "Total" };
+		DefaultTableModel mdlRes = new DefaultTableModel(colsRes, 0);
+		for (Compra c : compras) {
+			mdlRes.addRow(new Object[] { c.getIdCompra(), c.getNombreCliente(), c.getTotalCabecera() });
+		}
+		JTable tblRes = new JTable(mdlRes);
+		tblRes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-	    // 2) Modelo y tabla de DETALLE
-	    String[] colsDet = { "Libro", "Cantidad", "Precio U.", "Subtotal" };
-	    DefaultTableModel mdlDet = new DefaultTableModel(colsDet, 0);
-	    JTable tblDet = new JTable(mdlDet);
+		// 2) Modelo y tabla de DETALLE
+		String[] colsDet = { "Libro", "Cantidad", "Precio U.", "Subtotal" };
+		DefaultTableModel mdlDet = new DefaultTableModel(colsDet, 0);
+		JTable tblDet = new JTable(mdlDet);
 
-	    // 3) Listener para actualizar detalle
-	    tblRes.getSelectionModel().addListSelectionListener(e -> {
-	        if (e.getValueIsAdjusting()) return;
-	        int idx = tblRes.getSelectedRow();
-	        if (idx < 0) return;
-	        Compra sel = compras.get(idx);
-	        mdlDet.setRowCount(0);
-	        for (DetalleCompra d : sel.getDetalles()) {
-	            mdlDet.addRow(new Object[]{
-	                d.getTitulo(),
-	                d.getCantidad(),
-	                d.getPrecioUnitario(),
-	                d.getSubtotal()
-	            });
-	        }
-	    });
+		// 3) Listener para actualizar detalle
+		tblRes.getSelectionModel().addListSelectionListener(e -> {
+			if (e.getValueIsAdjusting())
+				return;
+			int idx = tblRes.getSelectedRow();
+			if (idx < 0)
+				return;
+			Compra sel = compras.get(idx);
+			mdlDet.setRowCount(0);
+			for (DetalleCompra d : sel.getDetalles()) {
+				mdlDet.addRow(new Object[] { d.getTitulo(), d.getCantidad(), d.getPrecioUnitario(), d.getSubtotal() });
+			}
+		});
 
-	    // 4) Forzar selección inicial para que cargue la primera compra
-	    if (tblRes.getRowCount() > 0) {
-	        tblRes.setRowSelectionInterval(0, 0);
-	    }
+		// 4) Forzar selección inicial para que cargue la primera compra
+		if (tblRes.getRowCount() > 0) {
+			tblRes.setRowSelectionInterval(0, 0);
+		}
 
-	    // 5) Split pane
-	    JSplitPane split = new JSplitPane(
-	        JSplitPane.VERTICAL_SPLIT,
-	        new JScrollPane(tblRes),
-	        new JScrollPane(tblDet)
-	    );
-	    split.setResizeWeight(0.5);
-	    split.setDividerLocation(150);
+		// 5) Split pane
+		JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(tblRes), new JScrollPane(tblDet));
+		split.setResizeWeight(0.5);
+		split.setDividerLocation(150);
 
-	    // 6) Mostrar en JDialog propio
-	    JDialog dlg = new JDialog((Frame) null, "Compras de Clientes", true);
-	    dlg.getContentPane().add(split);
-	    dlg.setSize(600, 400);
-	    dlg.setLocationRelativeTo(null);
-	    dlg.setVisible(true);
+		// 6) Mostrar en JDialog propio
+		JDialog dlg = new JDialog((Frame) null, "Compras de Clientes", true);
+		dlg.getContentPane().add(split);
+		dlg.setSize(600, 400);
+		dlg.setLocationRelativeTo(null);
+		dlg.setVisible(true);
 	}
-
-
 
 	public void mostrarUsuariosYModificar() {
 		// 1) Traigo siempre la lista fresca desde la BD
@@ -261,18 +262,49 @@ public class Administrador extends Usuario {
 			JOptionPane.showMessageDialog(null, "❌ No se pudo modificar el usuario.");
 		}
 	}
+	// Dentro de MenuAdministradorFrame.java
 
-	public void crearLibro() {
-		String titulo = JOptionPane.showInputDialog("Ingrese el título del libro:");
-		String sipnosis = JOptionPane.showInputDialog("Ingrese la sinopsis:");
-		int precio = Integer.parseInt(JOptionPane.showInputDialog("Ingrese el precio:"));
-		int stock = Integer.parseInt(JOptionPane.showInputDialog("Ingrese el stock:"));
-		String estado = JOptionPane.showInputDialog("Ingrese el estado del libro:");
+	   public boolean crearLibro() {
+	        // 1) Pido datos al usuario
+	        String titulo = JOptionPane.showInputDialog(null, "Título:");
+	        if (titulo == null) return false;
 
-		Libro nuevoLibro = new Libro(titulo, sipnosis, precio, stock, estado);
-		ControllerUsuario controller = new ControllerUsuario();
-		controller.agregarLibro(nuevoLibro); //
-	}
+	        String sinopsis = JOptionPane.showInputDialog(null, "Sinopsis:");
+	        if (sinopsis == null) return false;
+
+	        int precio;
+	        try {
+	            precio = Integer.parseInt(
+	                JOptionPane.showInputDialog(null, "Precio:")
+	            );
+	        } catch (NumberFormatException ex) {
+	            JOptionPane.showMessageDialog(
+	                null, "Precio inválido", "Error", JOptionPane.ERROR_MESSAGE
+	            );
+	            return false;
+	        }
+
+	        int stock;
+	        try {
+	            stock = Integer.parseInt(
+	                JOptionPane.showInputDialog(null, "Stock:")
+	            );
+	        } catch (NumberFormatException ex) {
+	            JOptionPane.showMessageDialog(
+	                null, "Stock inválido", "Error", JOptionPane.ERROR_MESSAGE
+	            );
+	            return false;
+	        }
+
+	        String estado = JOptionPane.showInputDialog(null, "Estado:");
+	        if (estado == null) return false;
+
+	        // 2) Construyo el libro y llamo al DAO (vía controller)
+	        Libro libro = new Libro(titulo, sinopsis, precio, stock, estado);
+	        return controller.agregarLibro(this.getId(), libro);
+	    }
+	
+
 
 	public void verLibrosDisponibles() {
 		ControllerUsuario controller = new ControllerUsuario();
@@ -436,4 +468,34 @@ public class Administrador extends Usuario {
 			}
 		}
 	}
+	  public List<Libro> listarProyectosPendientes() {
+	        try {
+	            return controller.obtenerProyectosPendientes();
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	            return Collections.emptyList();
+	        }
+	    }
+
+	    /**
+	     * Decide un proyecto aprobado o rechazado.
+	     */
+	    public boolean decidirProyecto(int idLibro, boolean aprobar) {
+	        String nuevoEstado = aprobar ? "APROBADO" : "RECHAZADO";
+	        try {
+	            return controller.actualizarEstadoProyecto(idLibro, nuevoEstado);
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+	    }
+	    public List<Libro> listarTodosLibros() {
+	        try {
+	            // adaptar el LinkedList a List<Libro>
+	            return controller.obtenerLibros();
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return Collections.emptyList();
+	        }
+	    }
 }

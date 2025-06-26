@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import BLL.*;
@@ -14,142 +15,99 @@ import repository.UsuarioRepository;
 
 public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, Encriptador {
 
+	private Connection getConnection() throws SQLException {
+		return Conexion.getInstance().getConnection();
+	}
+
 	public Usuario login(String mail, String passPlain) {
-	    Usuario usuario = null;
-	    String sql = """
-	        SELECT
-	            u.id_usuario,
-	            u.nombre,
-	            u.dni,
-	            u.tipo_usuario,
-	            a.independiente,
-	            a.editorial,
-	            cl.id_cliente   AS cliente_id,
-	            cl.saldo        AS cliente_saldo,
-	            cl.direccion    AS cliente_direccion,
-	            adm.apellido    AS admin_apellido
-	        FROM usuario u
-	        LEFT JOIN autor a           ON u.id_usuario = a.fk_usuario
-	        LEFT JOIN cliente cl        ON u.id_usuario = cl.fk_usuario
-	        LEFT JOIN administrador adm ON u.id_usuario = adm.fk_usuario
-	        WHERE
-	            u.mail = ?
-	          AND u.password = SHA2(?,256)
-	    """;
+		String sql = """
+				    SELECT u.id_usuario, u.nombre, u.dni, u.mail,
+				           u.tipo_usuario,
+				           a.independiente, a.editorial,
+				           cl.id_cliente      AS cliente_id,
+				           cl.saldo           AS cliente_saldo,
+				           cl.direccion       AS cliente_direccion,
+				           adm.apellido       AS admin_apellido
+				      FROM usuario u
+				 LEFT JOIN autor a           ON u.id_usuario = a.fk_usuario
+				 LEFT JOIN cliente cl        ON u.id_usuario = cl.fk_usuario
+				 LEFT JOIN administrador adm ON u.id_usuario = adm.fk_usuario
+				     WHERE u.mail = ?
+				       AND u.password = SHA2(?,256)
+				""";
 
 		try (Connection con = Conexion.getInstance().getConnection();
-				PreparedStatement stmt = con.prepareStatement(sql)) {
+				PreparedStatement ps = con.prepareStatement(sql)) {
 
-	        // 1) Pongo mail y password en claro; MySQL se encarga de hashearlo
-	        stmt.setString(1, mail);
-	        stmt.setString(2, passPlain);
+			ps.setString(1, mail);
+			ps.setString(2, passPlain);
 
-	        try (ResultSet rs = stmt.executeQuery()) {
-	            if (!rs.next()) {
-	                JOptionPane.showMessageDialog(null,
-	                    "❌ Error: usuario o contraseña incorrectos.");
-	                return null;
-	            }
-
-	            // 2) Extraigo datos comunes
-	            int    id       = rs.getInt("id_usuario");
-	            String nombre   = rs.getString("nombre");
-	            int    dni      = rs.getInt("dni");
-	            String tipo     = rs.getString("tipo_usuario").toLowerCase();
-
-	            // 3) Construyo el objeto según tipo y le inyecto el controller
-	            switch (tipo) {
-	                case "administrador" -> {
-	                    String apellido = rs.getString("admin_apellido");
-	                    Administrador adm = new Administrador(
-	                        id, nombre,  "", dni, mail, apellido
-	                    );
-	                    adm.setController(this);
-	                    usuario = adm;
-	                    
-	                }
-	                case "cliente" -> {
-	                    double saldo    = rs.getDouble("cliente_saldo");
-	                    String dir      = rs.getString("cliente_direccion");
-	                    int    idCliente = rs.getInt("cliente_id");
-	                    Cliente cli = new Cliente(
-	                        id, nombre,  "", dni, mail, dir
-	                    );
-	                    cli.setSaldo(saldo);
-	                    cli.setIdCliente(idCliente);
-	                    cli.setController(this);
-	                    usuario = cli;
-	                }
-	                case "autor" -> {
-	                    boolean ind = rs.getBoolean("independiente");
-	                    String ed   = rs.getString("editorial");
-	                    Autor au = new Autor(
-	                        id, nombre, "", dni, mail, ind, ed
-	                    );
-	                    au.setController(this);
-	                    usuario = au;
-	                }
-	                default -> {
-	                    JOptionPane.showMessageDialog(null,
-	                        "❌ Error: tipo de usuario desconocido.");
-	                    return null;
-	                }
-	            }
-
-	            JOptionPane.showMessageDialog(null,
-	                "✅ Inicio de sesión exitoso. ¡Bienvenido, " + nombre + "!");
-	        }
-
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	        JOptionPane.showMessageDialog(null,
-	            "❌ Error al iniciar sesión: " + ex.getMessage());
-	    }
-
-				if (!pwdBD.equals(pwdUser)) {
-					JOptionPane.showMessageDialog(null, "❌ Error: Contraseña incorrecta.");
+			try (ResultSet rs = ps.executeQuery()) {
+				if (!rs.next()) {
+					JOptionPane.showMessageDialog(null, "❌ Usuario o contraseña incorrectos.");
 					return null;
 				}
 
 				int id = rs.getInt("id_usuario");
 				String nombre = rs.getString("nombre");
 				int dni = rs.getInt("dni");
+				String tipo = rs.getString("tipo_usuario").toLowerCase();
 
-				switch (tipo.toLowerCase()) {
+				Usuario usuario;
+				switch (tipo) {
 				case "administrador" -> {
-					Administrador adm = new Administrador(id, nombre, pwdBD, dni, mail, rs.getString("admin_apellido"));
+					String apellido = rs.getString("admin_apellido");
+					Administrador adm = new Administrador(id, nombre, "", dni, mail, apellido);
 					adm.setController(this);
 					usuario = adm;
 				}
 				case "cliente" -> {
-					// Aquí usamos el constructor que recibe saldo
-					Cliente cli = new Cliente(id, nombre, pwdBD, dni, mail, rs.getString("cliente_direccion"),
-							rs.getDouble("cliente_saldo"));
+					int idCli = rs.getInt("cliente_id");
+					double saldo = rs.getDouble("cliente_saldo");
+					String dir = rs.getString("cliente_direccion");
+					Cliente cli = new Cliente(id, nombre, "", dni, mail, dir);
+					cli.setIdCliente(idCli);
+					cli.setSaldo(saldo);
 					cli.setController(this);
 					usuario = cli;
 				}
 				case "autor" -> {
-					Autor au = new Autor(id, nombre, pwdBD, dni, mail, rs.getBoolean("independiente"),
-							rs.getString("editorial"));
-					au.setController(this);
-					usuario = au;
+					boolean ind = rs.getBoolean("independiente");
+					String ed = rs.getString("editorial");
+
+					if (ind) {
+						// Paso exactamente los 7 parámetros que pide tu constructor
+						AutorIndependiente ai = new AutorIndependiente(id, // 1) id
+								nombre, // 2) nombre
+								passPlain, // 3) password plano (o vacío)
+								dni, // 4) dni
+								mail, // 5) mail
+								true, // 6) independiente = true
+								ed // 7) editorial (puede ser null)
+						);
+						ai.setController(this);
+						usuario = ai;
+					} else {
+						Autor au = new Autor(id, nombre, passPlain, dni, mail, false, ed);
+						au.setController(this);
+						usuario = au;
+					}
 				}
+
 				default -> {
-					JOptionPane.showMessageDialog(null, "❌ Error: Tipo de usuario desconocido: " + tipo);
+					JOptionPane.showMessageDialog(null, "❌ Tipo de usuario desconocido.");
 					return null;
 				}
 				}
 
-				JOptionPane.showMessageDialog(null, "✅ Inicio de sesión exitoso. Bienvenido, " + nombre + "!");
+				JOptionPane.showMessageDialog(null, "✅ Bienvenido, " + nombre + "!");
+				return usuario;
 			}
-
 		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, "❌ Error al iniciar sesión: " + e.getMessage(), "Error SQL",
-					JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "❌ Error de SQL: " + e.getMessage());
+			return null;
 		}
-
-		return usuario;
 	}
 
 	public static int obtenerNuevoIdUsuario() {
@@ -169,16 +127,19 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
 
 	@Override
 	public int agregarUsuario(Usuario usuario, String tipoUsuario, String datoAdicional1, String datoAdicional2) {
-		String sql = "INSERT INTO usuario (nombre, mail, dni, password, tipo_usuario) " + "VALUES (?, ?, ?, ?, ?)";
 		int idUsuario = -1;
-
+		String sql = """
+				  INSERT INTO usuario
+				    (nombre, mail, dni, password, tipo_usuario)
+				  VALUES (?, ?, ?, SHA2(?,256), ?)
+				""";
 		try (Connection con = Conexion.getInstance().getConnection();
 				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
 			ps.setString(1, usuario.getNombre());
 			ps.setString(2, usuario.getMail());
 			ps.setInt(3, usuario.getDni());
-			ps.setString(4, encriptar(usuario.getPassword()));
+			ps.setString(4, usuario.getPassword()); // texto plano aquí
 			ps.setString(5, tipoUsuario);
 
 			int filas = ps.executeUpdate();
@@ -254,20 +215,25 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
 		}
 	}
 
-	public void agregarLibro(Libro libro) {
-		try (Connection con = Conexion.getInstance().getConnection();
-				PreparedStatement stmt = con.prepareStatement(
-						"INSERT INTO libro (titulo, sipnosis, precio, stock, estado) VALUES (?, ?, ?, ?, ?)")) {
-			stmt.setString(1, libro.getTitulo());
-			stmt.setString(2, libro.getsipnosis());
-			stmt.setDouble(3, libro.getPrecio());
-			stmt.setInt(4, libro.getStock());
-			stmt.setString(5, libro.getEstado());
-			stmt.executeUpdate();
-			JOptionPane.showMessageDialog(null, "Libro guardado en la base de datos!");
-		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, "Error al guardar libro: " + e.getMessage());
-			e.printStackTrace();
+	public boolean agregarLibro(int idAutor, Libro libro) {
+		String sql = """
+				    INSERT INTO libro
+				      (titulo, sipnosis, precio, stock, estado, fk_autor)
+				    VALUES (?,?,?,?,?,?)
+				""";
+		try (Connection c = Conexion.getInstance().getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+
+			ps.setString(1, libro.getTitulo());
+			ps.setString(2, libro.getSipnosis());
+			ps.setDouble(3, libro.getPrecio());
+			ps.setInt(4, libro.getStock());
+			ps.setString(5, libro.getEstado());
+			ps.setInt(6, idAutor);
+
+			return ps.executeUpdate() == 1;
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+			return false;
 		}
 	}
 
@@ -363,34 +329,25 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
 	}
 
 	public boolean modificarUsuario(int idUsuario, String nuevoNombre, String nuevoMail, String nuevaPassword) {
-
 		String query = """
-				    UPDATE usuario
-				    SET nombre = ?, mail = ?, password = ?
-				    WHERE id_usuario = ?;
+				UPDATE usuario
+				SET nombre   = ?,
+				mail     = ?,
+				password = SHA2(?,256)
+				WHERE id_usuario = ?
 				""";
-
 		try (Connection con = Conexion.getInstance().getConnection();
 				PreparedStatement stmt = con.prepareStatement(query)) {
+
 			stmt.setString(1, nuevoNombre);
 			stmt.setString(2, nuevoMail);
-			stmt.setString(3, encriptar(nuevaPassword));
+// dejo el plain-text aquí y que MySQL lo transforme
+			stmt.setString(3, nuevaPassword);
 			stmt.setInt(4, idUsuario);
-			System.out.println("✅ ID Usuario recibido: " + idUsuario);
-			System.out.println("✅ ID Usuario recibido para modificar: " + idUsuario);
-			if (idUsuario == 0) {
-				JOptionPane.showMessageDialog(null, "❌ Error: El usuario no tiene un ID válido.");
-				return false;
-			}
-			System.out.println("🔍 Ejecutando UPDATE con ID: " + idUsuario);
 
-			int filasAfectadas = stmt.executeUpdate();
-			System.out.println("🔄 Filas afectadas: " + filasAfectadas);
-
-			return filasAfectadas > 0;
-
+			int filas = stmt.executeUpdate();
+			return filas > 0;
 		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, "❌ Error al modificar usuario: " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -615,111 +572,203 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
 		}
 		return -1;
 	}
+
 	public List<Compra> obtenerComprasConDetalle() {
-	    String sql = """
-	        SELECT t.id_transaccion    AS id_cmp,
-	               t.fk_cliente        AS id_cliente,
-	               u.nombre            AS nombre_cliente,
-	               t.total             AS total_cmp,
-	               tl.fk_libro         AS id_libro,
-	               l.titulo            AS titulo_libro,
-	               tl.cantidad,
-	               tl.precio_unitario
-	          FROM transaccion t
-	          JOIN usuario u          ON t.fk_cliente      = u.id_usuario
-	          JOIN transaccion_libro tl ON t.id_transaccion = tl.fk_transaccion
-	          JOIN libro   l          ON tl.fk_libro       = l.id_libro
-	         ORDER BY t.id_transaccion, tl.fk_libro
-	    """;
+		String sql = """
+				    SELECT t.id_transaccion    AS id_cmp,
+				           t.fk_cliente        AS id_cliente,
+				           u.nombre            AS nombre_cliente,
+				           t.total             AS total_cmp,
+				           tl.fk_libro         AS id_libro,
+				           l.titulo            AS titulo_libro,
+				           tl.cantidad,
+				           tl.precio_unitario
+				      FROM transaccion t
+				      JOIN usuario u          ON t.fk_cliente      = u.id_usuario
+				      JOIN transaccion_libro tl ON t.id_transaccion = tl.fk_transaccion
+				      JOIN libro   l          ON tl.fk_libro       = l.id_libro
+				     ORDER BY t.id_transaccion, tl.fk_libro
+				""";
 
-	    Map<Integer, Compra> mapa = new LinkedHashMap<>();
-	    try (
-	        Connection con = Conexion.getInstance().getConnection();
-	        PreparedStatement ps = con.prepareStatement(sql);
-	        ResultSet rs = ps.executeQuery()
-	    ) {
-	        while (rs.next()) {
-	            int idCmp = rs.getInt("id_cmp");
-	            Compra cmp = mapa.get(idCmp);
-	            if (cmp == null) {
-	                int idCli       = rs.getInt("id_cliente");
-	                String nomCli   = rs.getString("nombre_cliente");
-	                double tot      = rs.getDouble("total_cmp");
-	                cmp = new Compra(idCmp, idCli, nomCli, tot);
-	                mapa.put(idCmp, cmp);
-	            }
+		Map<Integer, Compra> mapa = new LinkedHashMap<>();
+		try (Connection con = Conexion.getInstance().getConnection();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				int idCmp = rs.getInt("id_cmp");
+				Compra cmp = mapa.get(idCmp);
+				if (cmp == null) {
+					int idCli = rs.getInt("id_cliente");
+					String nomCli = rs.getString("nombre_cliente");
+					double tot = rs.getDouble("total_cmp");
+					cmp = new Compra(idCmp, idCli, nomCli, tot);
+					mapa.put(idCmp, cmp);
+				}
 
-	            DetalleCompra det = new DetalleCompra(
-	                rs.getInt("id_libro"),
-	                rs.getString("titulo_libro"),
-	                rs.getInt("cantidad"),
-	                rs.getDouble("precio_unitario")
-	            );
-	            cmp.getDetalles().add(det);
-	        }
-	    } catch (SQLException ex) {
-	        JOptionPane.showMessageDialog(null,
-	            "❌ Error al obtener compras: " + ex.getMessage(),
-	            "Error SQL", JOptionPane.ERROR_MESSAGE);
-	        ex.printStackTrace();
-	    }
+				DetalleCompra det = new DetalleCompra(rs.getInt("id_libro"), rs.getString("titulo_libro"),
+						rs.getInt("cantidad"), rs.getDouble("precio_unitario"));
+				cmp.getDetalles().add(det);
+			}
+		} catch (SQLException ex) {
+			JOptionPane.showMessageDialog(null, "❌ Error al obtener compras: " + ex.getMessage(), "Error SQL",
+					JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
+		}
 
-	    return new ArrayList<>(mapa.values());
+		return new ArrayList<>(mapa.values());
 	}
 
+	public List<Libro> obtenerLibrosYVentasPorAutor(int idAutor) {
+		List<Libro> lista = new LinkedList<>();
+		String sql = """
+				    SELECT
+				      l.id_libro,
+				      l.titulo,
+				      l.sipnosis,
+				      l.precio,
+				      l.stock,
+				      l.estado,
+				      COALESCE(SUM(tl.cantidad), 0) AS ventas
+				    FROM libro l
+				    LEFT JOIN transaccion_libro tl
+				      ON l.id_libro = tl.fk_libro
+				    WHERE l.fk_autor = ?
+				    GROUP BY
+				      l.id_libro, l.titulo, l.sipnosis,
+				      l.precio, l.stock, l.estado
+				    ORDER BY l.titulo
+				""";
 
-    public List<Libro> obtenerLibrosYVentasPorAutor(int idAutor) {
-        List<Libro> lista = new LinkedList<>();
-        String sql = """
-            SELECT 
-              l.id_libro,
-              l.titulo,
-              l.sipnosis,
-              l.precio,
-              l.stock,
-              l.estado,
-              COALESCE(SUM(tl.cantidad), 0) AS ventas
-            FROM libro l
-            LEFT JOIN transaccion_libro tl
-              ON l.id_libro = tl.fk_libro
-            WHERE l.fk_autor = ?
-            GROUP BY 
-              l.id_libro, l.titulo, l.sipnosis,
-              l.precio, l.stock, l.estado
-            ORDER BY l.titulo
-        """;
+		try (Connection con = Conexion.getInstance().getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setInt(1, idAutor);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					// construyo Libro según tu constructor
+					Libro lib = new Libro(rs.getInt("id_libro"), rs.getString("titulo"), rs.getString("sipnosis"),
+							rs.getDouble("precio"), rs.getInt("stock"), rs.getString("estado"));
+					// asigno el total de unidades vendidas
+					lib.setVentas(rs.getInt("ventas"));
+					lista.add(lib);
+				}
+			}
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "❌ Error cargando libros/ventas: " + e.getMessage(), "Error SQL",
+					JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
 
-        try (
-          Connection con = Conexion.getInstance().getConnection();
-          PreparedStatement ps = con.prepareStatement(sql)
-        ) {
-          ps.setInt(1, idAutor);
-          try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-              // construyo Libro según tu constructor
-              Libro lib = new Libro(
-                rs.getInt("id_libro"),
-                rs.getString("titulo"),
-                rs.getString("sipnosis"),
-                rs.getDouble("precio"),
-                rs.getInt("stock"),
-                rs.getString("estado")
-              );
-              // asigno el total de unidades vendidas
-              lib.setVentas(rs.getInt("ventas"));
-              lista.add(lib);
-            }
-          }
-        } catch (SQLException e) {
-          JOptionPane.showMessageDialog(null,
-            "❌ Error cargando libros/ventas: " + e.getMessage(),
-            "Error SQL", JOptionPane.ERROR_MESSAGE
-          );
-          e.printStackTrace();
-        }
+		return lista;
+	}
 
-        return lista;
-    }
+	/** Autor inserta un nuevo proyecto con estado "PENDIENTE" */
+	public boolean agregarProyectoLibro(int autorId, Libro libro) throws SQLException {
 
+		String sql = """
+				    INSERT INTO libro
+				      (titulo, sipnosis, precio, stock, estado, fk_autor)
+				    VALUES (?,?,?,?, 'PENDIENTE', ?)
+				""";
+		try (Connection con = Conexion.getInstance().getConnection();
+				PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setString(1, libro.getTitulo());
+			ps.setString(2, libro.getSipnosis());
+			ps.setDouble(3, libro.getPrecio());
+			ps.setInt(4, libro.getStock());
+			ps.setInt(5, autorId);
+			return ps.executeUpdate() == 1;
+		}
+	}
+
+	/** Admin carga todos los proyectos con estado "PENDIENTE" */
+	public List<Libro> obtenerProyectosPendientes() throws SQLException {
+		String sql = """
+				    SELECT id_libro, titulo, sipnosis, precio, stock, estado
+				      FROM libro
+				     WHERE estado = 'PENDIENTE'
+				""";
+		List<Libro> lista = new ArrayList<>();
+		try (PreparedStatement ps = getConnection().prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				lista.add(new Libro(rs.getInt("id_libro"), rs.getString("titulo"), rs.getString("sipnosis"),
+						rs.getInt("precio"), rs.getInt("stock"), rs.getString("estado")));
+			}
+		}
+		return lista;
+	}
+
+	/** Admin aprueba o rechaza un proyecto cambiando su estado */
+	public boolean actualizarEstadoProyecto(int idLibro, String nuevoEstado) throws SQLException {
+		String sql = """
+				    UPDATE libro
+				       SET estado = ?
+				     WHERE id_libro = ?
+				""";
+		try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+			ps.setString(1, nuevoEstado); // "APROBADO" o "RECHAZADO"
+			ps.setInt(2, idLibro);
+			return ps.executeUpdate() == 1;
+		}
+	}
+
+	/** Autor consulta todos sus proyectos, con su estado actual */
+	public List<Libro> obtenerProyectosDeAutor(int autorId) throws SQLException {
+		String sql = """
+				    SELECT id_libro, titulo, sipnosis, precio, stock, estado
+				      FROM libro
+				     WHERE fk_autor = ?
+				""";
+		List<Libro> lista = new ArrayList<>();
+		try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+			ps.setInt(1, autorId);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					lista.add(new Libro(rs.getInt("id_libro"), rs.getString("titulo"), rs.getString("sipnosis"),
+							rs.getInt("precio"), rs.getInt("stock"), rs.getString("estado")));
+				}
+			}
+		}
+		return lista;
+	}
+
+	/** Carga todos los libros "en venta" (estado = "APROBADO") */
+	public List<Libro> obtenerLibrosEnVenta() throws SQLException {
+		String sql = """
+				    SELECT id_libro, titulo, sipnosis, precio, stock, estado
+				      FROM libro
+				     WHERE estado = 'APROBADO'
+				""";
+		List<Libro> lista = new ArrayList<>();
+		try (PreparedStatement ps = getConnection().prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				lista.add(new Libro(rs.getInt("id_libro"), rs.getString("titulo"), rs.getString("sipnosis"),
+						rs.getInt("precio"), rs.getInt("stock"), rs.getString("estado")));
+			}
+		}
+		return lista;
+	}
+	/** Sólo devuelve libros con estado = 'APROBADO' */
+	public List<Libro> obtenerLibrosDisponibles() throws SQLException {
+	    String sql = """
+	        SELECT id_libro, titulo, sipnosis, precio, stock, estado
+	          FROM libro
+	         WHERE estado = 'APROBADO'
+	    """;
+	    List<Libro> lista = new ArrayList<>();
+	    try (PreparedStatement ps = getConnection().prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+	        while (rs.next()) {
+	            lista.add(new Libro(
+	                rs.getInt("id_libro"),
+	                rs.getString("titulo"),
+	                rs.getString("sipnosis"),
+	                rs.getDouble("precio"),
+	                rs.getInt("stock"),
+	                rs.getString("estado")
+	            ));
+	        }
+	    }
+	    return lista;
+	}
 
 }

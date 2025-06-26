@@ -24,7 +24,7 @@ public class Autor extends Usuario {
         this.librosEnviados = new LinkedList<>(); 
     }
 
-    private ControllerUsuario controller;
+    protected ControllerUsuario controller;
     public void setController(ControllerUsuario controller) {
         this.controller = controller;
     }
