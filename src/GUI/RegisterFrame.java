@@ -41,84 +41,105 @@ public class RegisterFrame extends JFrame {
         add(txtPassword);
 
         btnRegistrar = new JButton("Registrar");
-        btnCancelar = new JButton("Cancelar");
-
+        btnCancelar  = new JButton("Cancelar");
         add(btnRegistrar);
         add(btnCancelar);
 
         btnRegistrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // 1) Leer y validar campos
                 String nombre = txtNombre.getText().trim();
-                String email = txtEmail.getText().trim();
+                String email  = txtEmail.getText().trim();
                 String dniStr = txtDni.getText().trim();
-                String password = new String(txtPassword.getPassword()).trim();
-                password = controller.encriptar(password);
+                String passRaw= new String(txtPassword.getPassword()).trim();
 
-                if (nombre.isEmpty() || email.isEmpty() || dniStr.isEmpty() || password.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "⚠️ Todos los campos son obligatorios.");
+                if (nombre.isEmpty() || email.isEmpty() 
+                 || dniStr.isEmpty() || passRaw.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                      null, "⚠️ Todos los campos son obligatorios.");
                     return;
                 }
-
                 if (!email.contains("@")) {
-                    JOptionPane.showMessageDialog(null, "⚠️ Email inválido. Debe contener '@'.");
+                    JOptionPane.showMessageDialog(
+                      null, "⚠️ Email inválido. Debe contener '@'.");
                     return;
                 }
-
                 int dni;
                 try {
                     dni = Integer.parseInt(dniStr);
                     if (dniStr.length() != 8) {
-                        JOptionPane.showMessageDialog(null, "⚠️ El DNI debe tener exactamente 8 dígitos.");
+                        JOptionPane.showMessageDialog(
+                          null, "⚠️ El DNI debe tener exactamente 8 dígitos.");
                         return;
                     }
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "⚠️ DNI inválido. Debe contener solo números.");
+                    JOptionPane.showMessageDialog(
+                      null, "⚠️ DNI inválido. Debe contener solo números.");
                     return;
                 }
 
-                String[] opciones = {"Administrador", "Cliente", "Autor"};
-                int seleccion = JOptionPane.showOptionDialog(null, "Seleccione el tipo de usuario", "Registro",
-                        JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
-
-                if (seleccion < 0) {
+                // 2) Elegir tipo
+                String[] opciones = {"Administrador","Cliente","Autor"};
+                int sel = JOptionPane.showOptionDialog(
+                    null, "Seleccione el tipo de usuario", "Registro",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, opciones, opciones[0]
+                );
+                if (sel < 0) {
                     JOptionPane.showMessageDialog(null, "Registro cancelado.");
                     return;
                 }
+                String tipoUsuario = opciones[sel];
 
-                String tipoUsuario = opciones[seleccion];
-
-                Usuario nuevoUsuario = null;
-                String datoAdicional1 = "";
-                String datoAdicional2 = "";
+                // 3) Crear Usuario según tipo
+                Usuario nuevoUsuario;
+                String dato1 = "", dato2 = "";
+                String passEnc = controller.encriptar(passRaw);
 
                 switch (tipoUsuario.toLowerCase()) {
                     case "administrador":
-                        datoAdicional1 = JOptionPane.showInputDialog("Ingrese su apellido:");
-                        nuevoUsuario = new Administrador(0, nombre, password, dni, email, datoAdicional1);
+                        dato1 = JOptionPane.showInputDialog("Ingrese su apellido:");
+                        nuevoUsuario = new Administrador(
+                          0, nombre, passEnc, dni, email, dato1);
                         break;
                     case "cliente":
-                        datoAdicional1 = JOptionPane.showInputDialog("Ingrese su dirección:");
-                        nuevoUsuario = new Cliente(0, nombre, password, dni, email, datoAdicional1);
+                        dato1 = JOptionPane.showInputDialog("Ingrese su dirección:");
+                        nuevoUsuario = new Cliente(
+                          0, nombre, passEnc, dni, email, dato1);
                         break;
                     case "autor":
-                        boolean independiente = JOptionPane.showConfirmDialog(null, "¿Es autor independiente?", "Autor Independiente",
-                                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-                        datoAdicional1 = String.valueOf(independiente);
-                        datoAdicional2 = independiente ? "Independiente" : JOptionPane.showInputDialog("Ingrese el nombre de la editorial:");
-                        nuevoUsuario = new Autor(0, nombre, password, dni, email, independiente, datoAdicional2);
+                        boolean ind = JOptionPane.showConfirmDialog(
+                          null,"¿Es autor independiente?","Autor",
+                          JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+                        dato1 = String.valueOf(ind);
+                        dato2 = ind
+                          ? "Independiente"
+                          : JOptionPane.showInputDialog(
+                              "Ingrese nombre de la editorial:");
+                        nuevoUsuario = new Autor(
+                          0, nombre, passEnc, dni, email, ind, dato2);
                         break;
                     default:
-                        JOptionPane.showMessageDialog(null, "Error: Tipo de usuario inválido.");
+                        JOptionPane.showMessageDialog(null, 
+                          "Error: Tipo de usuario inválido.");
                         return;
                 }
 
-                int idUsuario = controller.agregarUsuario(nuevoUsuario, tipoUsuario, datoAdicional1, datoAdicional2);
+                // 4) Insertar en BD y obtener ID
+                int idUsuario = controller.agregarUsuario(
+                  nuevoUsuario, tipoUsuario, dato1, dato2);
+
                 if (idUsuario > 0) {
-                    JOptionPane.showMessageDialog(null, "✅ Usuario registrado correctamente.");
+                    // ← Aquí sincronizas el objeto con su ID real
+                    nuevoUsuario.setId(idUsuario);
+
+                    JOptionPane.showMessageDialog(
+                      null, "✅ Usuario registrado. Su ID es: " + idUsuario);
                     dispose();
                 } else {
-                    JOptionPane.showMessageDialog(null, "❌ Error al registrar usuario.");
+                    JOptionPane.showMessageDialog(
+                      null, "❌ Error al registrar usuario.");
                 }
             }
         });

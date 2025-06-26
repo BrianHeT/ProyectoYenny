@@ -34,7 +34,37 @@ public class Transaccion {
 	        return total;
 	    }
 
-	    public List<ItemCarrito> getItems() {
+	    public int getId() {
+			return id;
+		}
+
+
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+
+
+		public void setCliente(Cliente cliente) {
+			this.cliente = cliente;
+		}
+
+
+
+		public void setTotal(double total) {
+			this.total = total;
+		}
+
+
+
+		public void setItems(List<ItemCarrito> items) {
+			this.items = items;
+		}
+
+
+
+		public List<ItemCarrito> getItems() {
 	        return items;
 	    }
 

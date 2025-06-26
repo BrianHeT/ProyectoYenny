@@ -1,31 +1,35 @@
 package GUI;
 
+import BLL.Usuario;
 import BLL.Administrador;
 import BLL.Cliente;
 import BLL.Autor;
+import DLL.ControllerUsuario;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import DLL.ControllerUsuario;
-import BLL.Usuario;
 
+/**
+ * Ventana de login que recibe un ControllerUsuario existente
+ * en lugar de crear uno nuevo.
+ */
 public class LoginFrame extends JFrame {
+    private ControllerUsuario controller;
     private JTextField txtEmail;
     private JPasswordField txtPassword;
     private JButton btnLogin, btnCancelar;
-    private ControllerUsuario controller;
-    
 
+    // ← Constructor que acepta el controller
     public LoginFrame(ControllerUsuario controller) {
         this.controller = controller;
 
         setTitle("Iniciar Sesión");
-        setSize(350, 200); 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new GridLayout(3, 2, 10, 10)); 
-        
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(350, 180);
+        setLocationRelativeTo(null);
+        setLayout(new GridLayout(3, 2, 10, 10));
+
+        // Campos
         add(new JLabel("Email:"));
         txtEmail = new JTextField();
         add(txtEmail);
@@ -34,46 +38,54 @@ public class LoginFrame extends JFrame {
         txtPassword = new JPasswordField();
         add(txtPassword);
 
-        btnLogin = new JButton("Ingresar");
+        // Botones
+        btnLogin    = new JButton("Login");
         btnCancelar = new JButton("Cancelar");
-
         add(btnLogin);
         add(btnCancelar);
 
-        btnLogin.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String email = txtEmail.getText().trim();
-                String password = new String(txtPassword.getPassword()).trim();
+        // Acción Login
+        btnLogin.addActionListener(e -> {
+            String email = txtEmail.getText().trim();
+            String pass  = new String(txtPassword.getPassword()).trim();
 
-                if (email.isEmpty() || password.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "⚠️ Por favor, complete todos los campos.");
-                    return;
-                }
+            if (email.isEmpty() || pass.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Ingrese email y contraseña.",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-                Usuario usuarioLogueado = controller.login(email, password);
-                if (usuarioLogueado != null) {
-                    JOptionPane.showMessageDialog(null, "Bienvenido, " + usuarioLogueado.getNombre() + "!");
-                    if (usuarioLogueado instanceof Administrador) {
-                        new MenuAdministradorFrame((Administrador) usuarioLogueado);
-                    } else if (usuarioLogueado instanceof Cliente) {
-                        new MenuClienteFrame((Cliente) usuarioLogueado, controller);
-                    } else if (usuarioLogueado instanceof Autor) {
-                        new MenuAutorFrame((Autor) usuarioLogueado);
-                    }
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Credenciales incorrectas.");
-                }
+            Usuario u = controller.login(email, pass);
+            if (u == null) return;  // ya mostró mensaje de error
+
+            // Dependiendo del tipo, abrimos el menú correspondiente
+            if (u instanceof Administrador adm) {
+                adm.setController(controller);
+                new MenuAdministradorFrame(controller, adm);
+                dispose();
+            }
+            else if (u instanceof Cliente cli) {
+                cli.setController(controller);
+                new MenuClienteFrame(controller, cli);
+                dispose();
+            }
+            else if (u instanceof Autor au) {
+                au.setController(controller);
+                new MenuAutorFrame(controller, au);
+                dispose();
+            }
+            else {
+                JOptionPane.showMessageDialog(this,
+                    "Usuario de tipo no soportado: " 
+                    + u.getClass().getSimpleName(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-
-
-       
+        // Acción Cancelar
         btnCancelar.addActionListener(e -> dispose());
 
-        setLocationRelativeTo(null); 
         setVisible(true);
     }
 }

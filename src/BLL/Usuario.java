@@ -19,7 +19,7 @@ public abstract  class Usuario implements Encriptador {
 	private static LinkedList<Cliente> clientes = new LinkedList<>();
 	private static LinkedList<Autor> autor = new LinkedList<>();
 	
-	
+    protected ControllerUsuario controller;
 
    
 
@@ -35,7 +35,13 @@ public abstract  class Usuario implements Encriptador {
 	    }
 
 
+	  public void setController(ControllerUsuario controller) {
+	        this.controller = controller;
+	    }
 
+	    public ControllerUsuario getController() {
+	        return controller;
+	    }
 	
 	 
 	 public int getId() {
