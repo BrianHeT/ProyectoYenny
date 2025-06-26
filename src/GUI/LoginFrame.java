@@ -12,68 +12,68 @@ import DLL.ControllerUsuario;
 import BLL.Usuario;
 
 public class LoginFrame extends JFrame {
-    private JTextField txtEmail;
-    private JPasswordField txtPassword;
-    private JButton btnLogin, btnCancelar;
-    private ControllerUsuario controller;
-    
+	private JTextField txtEmail;
+	private JPasswordField txtPassword;
+	private JButton btnLogin, btnCancelar;
+	private ControllerUsuario controller;
 
-    public LoginFrame(ControllerUsuario controller) {
-        this.controller = controller;
+	public LoginFrame(ControllerUsuario controller) {
+		this.controller = controller;
 
-        setTitle("Iniciar Sesión");
-        setSize(350, 200); 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new GridLayout(3, 2, 10, 10)); 
-        
-        add(new JLabel("Email:"));
-        txtEmail = new JTextField();
-        add(txtEmail);
+		setTitle("Iniciar Sesión");
+		setSize(350, 200);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setLayout(new GridLayout(3, 2, 10, 10));
 
-        add(new JLabel("Contraseña:"));
-        txtPassword = new JPasswordField();
-        add(txtPassword);
+		add(new JLabel("Email:"));
+		txtEmail = new JTextField();
+		add(txtEmail);
 
-        btnLogin = new JButton("Ingresar");
-        btnCancelar = new JButton("Cancelar");
+		add(new JLabel("Contraseña:"));
+		txtPassword = new JPasswordField();
+		add(txtPassword);
 
-        add(btnLogin);
-        add(btnCancelar);
+		btnLogin = new JButton("Ingresar");
+		btnCancelar = new JButton("Cancelar");
 
-        btnLogin.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String email = txtEmail.getText().trim();
-                String password = new String(txtPassword.getPassword()).trim();
+		add(btnLogin);
+		add(btnCancelar);
 
-                if (email.isEmpty() || password.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "⚠️ Por favor, complete todos los campos.");
-                    return;
-                }
+		btnLogin.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String email = txtEmail.getText().trim();
+				String password = new String(txtPassword.getPassword()).trim();
 
-                Usuario usuarioLogueado = controller.login(email, password);
-                if (usuarioLogueado != null) {
-                    JOptionPane.showMessageDialog(null, "Bienvenido, " + usuarioLogueado.getNombre() + "!");
-                    if (usuarioLogueado instanceof Administrador) {
-                        new MenuAdministradorFrame((Administrador) usuarioLogueado);
-                    } else if (usuarioLogueado instanceof Cliente) {
-                        new MenuClienteFrame((Cliente) usuarioLogueado, controller);
-                    } else if (usuarioLogueado instanceof Autor) {
-                        new MenuAutorFrame((Autor) usuarioLogueado);
-                    }
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Credenciales incorrectas.");
-                }
-            }
-        });
+				if (email.isEmpty() || password.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "⚠️ Por favor, complete todos los campos.");
+					return;
+				}
 
+				Usuario usuarioLogueado = controller.login(email, password);
+				if (usuarioLogueado != null) {
+					JOptionPane.showMessageDialog(null, "Bienvenido, " + usuarioLogueado.getNombre() + "!");
+					if (usuarioLogueado instanceof Administrador) {
+						MenuAdministradorFrame adminFrame = new MenuAdministradorFrame((Administrador) usuarioLogueado);
+						adminFrame.setVisible(true);
+					} else if (usuarioLogueado instanceof Cliente) {
+						MenuClienteFrame cliFrame = new MenuClienteFrame((Cliente) usuarioLogueado, controller);
+						cliFrame.setVisible(true);
+					} else if (usuarioLogueado instanceof Autor) {
+						MenuAutorFrame auFrame = new MenuAutorFrame((Autor) usuarioLogueado);
+						auFrame.setVisible(true);
+					}
+					dispose(); // cierra el LoginFrame
 
+				} else {
+					JOptionPane.showMessageDialog(null, "Credenciales incorrectas.");
+				}
+			}
+		});
 
-       
-        btnCancelar.addActionListener(e -> dispose());
+		btnCancelar.addActionListener(e -> dispose());
 
-        setLocationRelativeTo(null); 
-        setVisible(true);
-    }
+		setLocationRelativeTo(null);
+		setVisible(true);
+	}
 }

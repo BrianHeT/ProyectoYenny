@@ -1,9 +1,14 @@
 package BLL;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
+import DLL.ControllerUsuario;
 import repository.TipoOpcionAutor;
 
 public class Autor extends Usuario {
@@ -19,7 +24,15 @@ public class Autor extends Usuario {
         this.librosEnviados = new LinkedList<>(); 
     }
 
+    private ControllerUsuario controller;
+    public void setController(ControllerUsuario controller) {
+        this.controller = controller;
+    }
 
+    // (opcional) un getter si lo necesitas
+    public ControllerUsuario getController() {
+        return controller;
+    }
 	
 
 	public void setLibrosEnviados(LinkedList<Libro> librosEnviados) {
@@ -111,10 +124,12 @@ public class Autor extends Usuario {
 	            switch (opcion) {
 	                case 0:
 	                    JOptionPane.showMessageDialog(null, "Accediendo a gestión de libros...");
+	                    verMisVentas();
 	                    
 	                    break;
 	                case 1:
 	                    JOptionPane.showMessageDialog(null, "Mostrando estadísticas...");
+	                    verMisPublicaciones();
 	                    
 	                    break;
 	                case 2:
@@ -125,5 +140,69 @@ public class Autor extends Usuario {
 	            }
 	        } while (opcion != 3);
 	    }
+
+	// BLL/Autor.java
+	 public void verMisPublicaciones() {
+	     List<Libro> lista = 
+	       controller.obtenerLibrosYVentasPorAutor(getId());
+	     if (lista.isEmpty()) {
+	         JOptionPane.showMessageDialog(null,
+	           "Aún no publicaste ningún libro.");
+	         return;
+	     }
+
+	     String[] cols = { "ID", "Título", "Precio", "Stock", "Estado" };
+	     DefaultTableModel mdl = new DefaultTableModel(cols, 0);
+	     for (Libro lib : lista) {
+	         mdl.addRow(new Object[]{
+	           lib.getId(),
+	           lib.getTitulo(),
+	           lib.getPrecio(),
+	           lib.getStock(),
+	           lib.getEstado()
+	         });
+	     }
+	     JTable tbl = new JTable(mdl);
+	     tbl.setFillsViewportHeight(true);
+
+	     JOptionPane.showMessageDialog(
+	       null,
+	       new JScrollPane(tbl),
+	       "Mis Publicaciones",
+	       JOptionPane.PLAIN_MESSAGE
+	     );
+	 }
+
+	 public void verMisVentas() {
+	     List<Libro> lista = 
+	       controller.obtenerLibrosYVentasPorAutor(getId());
+	     if (lista.isEmpty()) {
+	         JOptionPane.showMessageDialog(null,
+	           "Todavía no se vendió ningún libro tuyo.");
+	         return;
+	     }
+
+	     String[] cols = { "ID", "Título", "Vendidas", "Recaudado" };
+	     DefaultTableModel mdl = new DefaultTableModel(cols, 0);
+	     for (Libro lib : lista) {
+	         int vend = lib.getVentas();
+	         double rec = vend * lib.getPrecio();
+	         mdl.addRow(new Object[]{
+	           lib.getId(),
+	           lib.getTitulo(),
+	           vend,
+	           rec
+	         });
+	     }
+	     JTable tbl = new JTable(mdl);
+	     tbl.setFillsViewportHeight(true);
+
+	     JOptionPane.showMessageDialog(
+	       null,
+	       new JScrollPane(tbl),
+	       "Mis Ventas",
+	       JOptionPane.PLAIN_MESSAGE
+	     );
+	 }
 
 }

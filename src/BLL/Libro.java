@@ -64,7 +64,7 @@ public class Libro {
         this.titulo = titulo;
         this.sipnosis = sipnosis;
         this.precio = precio;
-        this.stock = stock; // 📌 Asegúrate de que stock se asigna correctamente
+        this.stock = stock; // 
         this.estado = estado;
     }
 

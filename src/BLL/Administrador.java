@@ -22,6 +22,14 @@ public class Administrador extends Usuario {
 	        System.out.println("✅ Administrador creado con ID en objeto (después de asignación): " + this.getId()); // 📌 Verificación
 	    }
 
+	    private ControllerUsuario controller;
+	    public void setController(ControllerUsuario controller) {
+	        this.controller = controller;
+	    }
+
+	    public ControllerUsuario getController() {
+	        return controller;
+	    }
 
 	public String getApellido() {
 		return apellido;

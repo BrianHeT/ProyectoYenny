@@ -3,6 +3,8 @@ package DLL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 import BLL.*;
 import repository.Encriptador;
@@ -10,82 +12,96 @@ import repository.UsuarioRepository;
 
 public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, Encriptador {
 
-	public Usuario login(String mail, String password) {
+	public Usuario login(String mail, String passPlain) {
 	    Usuario usuario = null;
 	    String sql = """
 	        SELECT
 	            u.id_usuario,
 	            u.nombre,
 	            u.dni,
-	            u.password,
 	            u.tipo_usuario,
 	            a.independiente,
 	            a.editorial,
-	            cl.id_cliente AS cliente_id,      
-	            cl.saldo AS cliente_saldo,
-	            adm.apellido AS admin_apellido,
-	            cl.direccion AS cliente_direccion
-	        FROM
-	            usuario u
-	        LEFT JOIN
-	            autor a ON u.id_usuario = a.fk_usuario
-	        LEFT JOIN
-	            cliente cl ON u.id_usuario = cl.fk_usuario
-	        LEFT JOIN
-	            administrador adm ON u.id_usuario = adm.fk_usuario
+	            cl.id_cliente   AS cliente_id,
+	            cl.saldo        AS cliente_saldo,
+	            cl.direccion    AS cliente_direccion,
+	            adm.apellido    AS admin_apellido
+	        FROM usuario u
+	        LEFT JOIN autor a           ON u.id_usuario = a.fk_usuario
+	        LEFT JOIN cliente cl        ON u.id_usuario = cl.fk_usuario
+	        LEFT JOIN administrador adm ON u.id_usuario = adm.fk_usuario
 	        WHERE
 	            u.mail = ?
+	          AND u.password = SHA2(?,256)
 	    """;
 
 	    try (Connection con = Conexion.getInstance().getConnection();
 	         PreparedStatement stmt = con.prepareStatement(sql)) {
 
+	        // 1) Pongo mail y password en claro; MySQL se encarga de hashearlo
 	        stmt.setString(1, mail);
-	        try (ResultSet rs = stmt.executeQuery()) {
-	            if (rs.next()) { 
-	                int id = rs.getInt("id_usuario");
-	                String nombre = rs.getString("nombre");
-	                int dni = rs.getInt("dni");
-	                String passwordEncriptadaBD = rs.getString("password");
-	                String tipoUsuario = rs.getString("tipo_usuario");
+	        stmt.setString(2, passPlain);
 
-	                
-	                if (passwordEncriptadaBD.equals(encriptar(password))) { 
-	                    switch (tipoUsuario.toLowerCase()) {
-	                        case "administrador":
-	                            String apellido = rs.getString("admin_apellido");
-	                            usuario = new Administrador(id, nombre, passwordEncriptadaBD, dni, mail, apellido);
-	                            break;
-	                        case "cliente":
-	                            double saldo = rs.getDouble("cliente_saldo");
-	                            String direccion = rs.getString("cliente_direccion");
-	                            int idCliente = rs.getInt("cliente_id"); 
-	                            usuario = new Cliente(id, nombre, passwordEncriptadaBD, dni, mail, direccion);
-	                            ((Cliente)usuario).setSaldo(saldo);
-	                            ((Cliente)usuario).setController(this); 
-	                            ((Cliente)usuario).setIdCliente(idCliente); 
-	                            break;
-	                        case "autor":
-	                            boolean independiente = rs.getBoolean("independiente");
-	                            String editorial = rs.getString("editorial");
-	                            usuario = new Autor(id, nombre, passwordEncriptadaBD, dni, mail, independiente, editorial);
-	                            break;
-	                        default:
-	                            JOptionPane.showMessageDialog(null, "❌ Error: Tipo de usuario desconocido.");
-	                            return null; 
-	                    }
-	                    JOptionPane.showMessageDialog(null, "✅ Inicio de sesión exitoso. Bienvenido, " + nombre + "!");
-	                } else {
-	                    JOptionPane.showMessageDialog(null, "❌ Error: Contraseña incorrecta.");
+	        try (ResultSet rs = stmt.executeQuery()) {
+	            if (!rs.next()) {
+	                JOptionPane.showMessageDialog(null,
+	                    "❌ Error: usuario o contraseña incorrectos.");
+	                return null;
+	            }
+
+	            // 2) Extraigo datos comunes
+	            int    id       = rs.getInt("id_usuario");
+	            String nombre   = rs.getString("nombre");
+	            int    dni      = rs.getInt("dni");
+	            String tipo     = rs.getString("tipo_usuario").toLowerCase();
+
+	            // 3) Construyo el objeto según tipo y le inyecto el controller
+	            switch (tipo) {
+	                case "administrador" -> {
+	                    String apellido = rs.getString("admin_apellido");
+	                    Administrador adm = new Administrador(
+	                        id, nombre,  "", dni, mail, apellido
+	                    );
+	                    adm.setController(this);
+	                    usuario = adm;
 	                    
 	                }
-	            } else {
-	                JOptionPane.showMessageDialog(null, "❌ Error: Usuario no encontrado.");
+	                case "cliente" -> {
+	                    double saldo    = rs.getDouble("cliente_saldo");
+	                    String dir      = rs.getString("cliente_direccion");
+	                    int    idCliente = rs.getInt("cliente_id");
+	                    Cliente cli = new Cliente(
+	                        id, nombre,  "", dni, mail, dir
+	                    );
+	                    cli.setSaldo(saldo);
+	                    cli.setIdCliente(idCliente);
+	                    cli.setController(this);
+	                    usuario = cli;
+	                }
+	                case "autor" -> {
+	                    boolean ind = rs.getBoolean("independiente");
+	                    String ed   = rs.getString("editorial");
+	                    Autor au = new Autor(
+	                        id, nombre, "", dni, mail, ind, ed
+	                    );
+	                    au.setController(this);
+	                    usuario = au;
+	                }
+	                default -> {
+	                    JOptionPane.showMessageDialog(null,
+	                        "❌ Error: tipo de usuario desconocido.");
+	                    return null;
+	                }
 	            }
+
+	            JOptionPane.showMessageDialog(null,
+	                "✅ Inicio de sesión exitoso. ¡Bienvenido, " + nombre + "!");
 	        }
-	    } catch (SQLException e) {
-	        JOptionPane.showMessageDialog(null, "❌ Error al iniciar sesión: " + e.getMessage());
-	        e.printStackTrace();
+
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	        JOptionPane.showMessageDialog(null,
+	            "❌ Error al iniciar sesión: " + ex.getMessage());
 	    }
 
 	    return usuario;
@@ -494,6 +510,59 @@ public class ControllerUsuario<T extends Usuario> implements UsuarioRepository, 
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public List<Libro> obtenerLibrosYVentasPorAutor(int idAutor) {
+        List<Libro> lista = new LinkedList<>();
+        String sql = """
+            SELECT 
+              l.id_libro,
+              l.titulo,
+              l.sipnosis,
+              l.precio,
+              l.stock,
+              l.estado,
+              COALESCE(SUM(tl.cantidad), 0) AS ventas
+            FROM libro l
+            LEFT JOIN transaccion_libro tl
+              ON l.id_libro = tl.fk_libro
+            WHERE l.fk_autor = ?
+            GROUP BY 
+              l.id_libro, l.titulo, l.sipnosis,
+              l.precio, l.stock, l.estado
+            ORDER BY l.titulo
+        """;
+
+        try (
+          Connection con = Conexion.getInstance().getConnection();
+          PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+          ps.setInt(1, idAutor);
+          try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+              // construyo Libro según tu constructor
+              Libro lib = new Libro(
+                rs.getInt("id_libro"),
+                rs.getString("titulo"),
+                rs.getString("sipnosis"),
+                rs.getDouble("precio"),
+                rs.getInt("stock"),
+                rs.getString("estado")
+              );
+              // asigno el total de unidades vendidas
+              lib.setVentas(rs.getInt("ventas"));
+              lista.add(lib);
+            }
+          }
+        } catch (SQLException e) {
+          JOptionPane.showMessageDialog(null,
+            "❌ Error cargando libros/ventas: " + e.getMessage(),
+            "Error SQL", JOptionPane.ERROR_MESSAGE
+          );
+          e.printStackTrace();
+        }
+
+        return lista;
     }
 
 
